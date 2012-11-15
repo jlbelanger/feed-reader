@@ -1,30 +1,14 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
 import android.os.Bundle;
-import android.app.Activity;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.support.v4.app.NavUtils;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 
-public class SettingsActivity extends Activity {
-	
+public class SettingsActivity extends PreferenceActivity {
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_settings);
+		PreferenceManager preferenceManager = getPreferenceManager();
+		preferenceManager.setSharedPreferencesName("preferences");
+		addPreferencesFromResource(R.xml.preferences);
 	}
-	
-	@Override public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_settings, menu);
-		return true;
-	}
-	
-	@Override public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case android.R.id.home:
-			NavUtils.navigateUpFromSameTask(this);
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
-	
 }

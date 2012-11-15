@@ -20,19 +20,27 @@ public class SubscribeActivity extends Activity {
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_subscribe);
-
+	}
+	
+	@Override public void onStart() {
+		super.onStart();
+		
 		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
 		mDB = mDatabase.getWritableDatabase();
 		
 		final Button btnSubscribe = (Button)findViewById(R.id.buttonSubscribe);
 		btnSubscribe.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
+				// get EditText
 				final EditText txtURL = (EditText)findViewById(R.id.editTextURL);
 				
+				// get EditText value
 				String url = txtURL.getText().toString();
 				
-				mDatabase.addFeed(mDB, url, url);
+				// update database
+				mDatabase.addFeed(mDB, Utilities.getFeedTitle(url), url);
 				
+				// return to main activity
 				Intent intent = new Intent(v.getContext(), MainActivity.class);
 				startActivityForResult(intent, 0);
 			}

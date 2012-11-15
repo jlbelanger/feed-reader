@@ -69,16 +69,14 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public Feed getFeed(SQLiteDatabase mDB, String id) {
-		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
-		queryBuilder.setTables(Feeds.FEEDS_TABLE_NAME);
-		
-		String asColumnsToReturn[] = {Feeds.FEED_NAME, Feeds.FEED_URL};
-		Cursor mCursor = queryBuilder.query(mDB, asColumnsToReturn, Feeds._ID + "=?", new String[] {id}, null, null, Feeds.DEFAULT_SORT_ORDER);
-		//startManagingCursor(mCursor);
+		String columns[] = {Feeds.FEED_NAME, Feeds.FEED_URL};
+		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, Feeds._ID + "=?", new String[] {id}, null, null, Feeds.DEFAULT_SORT_ORDER);
 		mCursor.moveToFirst();
 		
 		String name = mCursor.getString(0);
 		String url = mCursor.getString(1);
+		
+		mCursor.close();
 		
 		return new Feed(id, name, url);
 	}

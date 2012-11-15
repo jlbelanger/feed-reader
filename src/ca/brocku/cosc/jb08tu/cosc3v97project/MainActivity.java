@@ -2,8 +2,6 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 
-// TODO get feed name when first subscribe
-
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;

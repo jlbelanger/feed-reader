@@ -1,5 +1,12 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -7,29 +14,56 @@ import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.support.v4.app.NavUtils;
 
 public class FeedActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
 	protected SQLiteDatabase		mDB			= null;
-	private static String			feedId			= "";
+	private static String			feedId		= "";
 	private static Feed				feed		= null;
 	
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_feed);
+	}
+	
+	@Override public void onStart() {
+		super.onStart();
 		
 		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
 		mDB = mDatabase.getWritableDatabase();
 		
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {
+			// get feed id
 			feedId = "" + bundle.getLong("id");
 			feed = mDatabase.getFeed(mDB, feedId);
+			
+			// update interface
 			setTitle(feed.getName());
+			
+			// read feed items
+			List<FeedItem> feedItems = Utilities.getFeedItems(feed.getURL());
+			
+			// create feed item map for adapter
+			List<Map<String, String>> feedItemsList = new ArrayList<Map<String, String>>();
+			int numItems = feedItems.size();
+			SimpleDateFormat dateFormatter = Utilities.getDateFormatter(this);
+			for(int i = 0; i < numItems; i++) {
+				Map<String, String> item = new HashMap<String, String>(2);
+				item.put("title", feedItems.get(i).getTitle());
+				item.put("pubDate", "" + dateFormatter.format(new Date(feedItems.get(i).getPubDate())));
+				feedItemsList.add(item);
+			}
+			
+			// add feed items to ListView
+			SimpleAdapter adapter = new SimpleAdapter(this, feedItemsList, android.R.layout.simple_list_item_2, new String[] {"title", "pubDate"}, new int[] {android.R.id.text1, android.R.id.text2});
+			final ListView lstContacts = (ListView)findViewById(R.id.listViewFeedItems);
+			lstContacts.setAdapter(adapter);
 		}
 	}
 	
@@ -51,7 +85,6 @@ public class FeedActivity extends Activity {
 				dialog.setNegativeButton("Cancel", null);
 				dialog.setPositiveButton("Unsubscribe", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
-						Log.i("feed", "unsubscribe from feed id = " + feedId);
 						mDatabase.deleteFeed(mDB, "" + feedId);
 						Intent intent = new Intent(FeedActivity.this, MainActivity.class);
 						startActivityForResult(intent, 0);

@@ -19,37 +19,52 @@ public class EditFeedActivity extends Activity {
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_edit_feed);
+	}
+	
+	@Override public void onStart() {
+		super.onStart();
 		
 		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
 		mDB = mDatabase.getWritableDatabase();
 		
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {
+			// get feed id
 			id = "" + bundle.getLong("id");
 			Feed feed = mDatabase.getFeed(mDB, id);
+			
+			// update interface
 			setTitle("Edit " + feed.getName());
 			
+			// get EditText
 			final EditText txtName = (EditText)findViewById(R.id.editTextName);
 			final EditText txtURL = (EditText)findViewById(R.id.editTextURL);
 			
+			// set EditText
 			txtName.setText(feed.getName());
 			txtURL.setText(feed.getURL());
 		}
 		
-		final Button btnEditFeed = (Button)findViewById(R.id.buttonEditFeed);
-		
 		if(bundle != null) {
+			final Button btnEditFeed = (Button)findViewById(R.id.buttonEditFeed);
 			btnEditFeed.setOnClickListener(new View.OnClickListener() {
 				public void onClick(View v) {
+					// get EditText
 					final EditText txtName = (EditText)findViewById(R.id.editTextName);
 					final EditText txtURL = (EditText)findViewById(R.id.editTextURL);
 					
+					// get EditText values
 					String name = txtName.getText().toString();
 					String url = txtURL.getText().toString();
 					
+					// update database
 					mDatabase.editFeed(mDB, id, name, url);
 					
-					Intent intent = new Intent(v.getContext(), MainActivity.class);
+					// return to feed activity
+					Intent intent = new Intent(v.getContext(), FeedActivity.class);
+					Bundle bundle = new Bundle();
+					bundle.putLong("id", Long.parseLong(id));
+					intent.putExtras(bundle);
 					startActivityForResult(intent, 0);
 				}
 			});
@@ -79,5 +94,4 @@ public class EditFeedActivity extends Activity {
 			mDatabase.close();
 		}
 	}
-	
 }

@@ -1,6 +1,10 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import android.content.Context;
 
 public class FeedItem implements Serializable {
 	private static final long	serialVersionUID	= 1L;
@@ -24,8 +28,9 @@ public class FeedItem implements Serializable {
 		return this.title;
 	}
 	
-	public String getPubDate() {
-		return this.pubDate;
+	public String getPubDate(Context context) {
+		SimpleDateFormat dateFormatter = Utilities.getDateFormatter(context);
+		return dateFormatter.format(new Date(this.pubDate));
 	}
 	
 	public String getLink() {

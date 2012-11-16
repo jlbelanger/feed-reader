@@ -1,29 +1,26 @@
 <resources>
 
     <string name="app_name">FeedMe</string>
-    
     <string name="menu_settings">Settings</string>
     <string name="menu_subscribe">Subscribe</string>
     <string name="menu_unsubscribe">Unsubscribe</string>
     <string name="menu_edit_feed">Edit Feed</string>
-    
     <string name="title_activity_main">FeedMe</string>
     <string name="title_activity_subscribe">Subscribe</string>
     <string name="title_activity_settings">Settings</string>
     <string name="title_activity_feed">Feed</string>
     <string name="title_activity_edit_feed">Edit Feed</string>
-    
     <string name="subscribe_textview">Enter a feed address:</string>
     <string name="subscribe_button">Subscribe</string>
     <string name="subscribe_hint">http://news.google.com/</string>
-    
     <string name="editfeed_name">Name</string>
     <string name="editfeed_name_hint">Google News</string>
     <string name="editfeed_url">URL</string>
     <string name="editfeed_url_hint">http://news.google.com/</string>
     <string name="editfeed_button">Edit Feed</string>
-    
     <string name="settings_date_format">Date Format</string>
     <string name="settings_time_format">Time Format</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_feed_item">FeedItemActivity</string>
 
 </resources>

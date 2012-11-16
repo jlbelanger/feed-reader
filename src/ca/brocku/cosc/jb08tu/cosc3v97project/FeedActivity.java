@@ -1,8 +1,6 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +14,8 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.support.v4.app.NavUtils;
@@ -47,23 +47,33 @@ public class FeedActivity extends Activity {
 			setTitle(feed.getName());
 			
 			// read feed items
-			List<FeedItem> feedItems = Utilities.getFeedItems(feed.getURL());
+			final List<FeedItem> feedItems = Utilities.getFeedItems(feed.getURL());
 			
 			// create feed item map for adapter
 			List<Map<String, String>> feedItemsList = new ArrayList<Map<String, String>>();
 			int numItems = feedItems.size();
-			SimpleDateFormat dateFormatter = Utilities.getDateFormatter(this);
 			for(int i = 0; i < numItems; i++) {
 				Map<String, String> item = new HashMap<String, String>(2);
 				item.put("title", feedItems.get(i).getTitle());
-				item.put("pubDate", "" + dateFormatter.format(new Date(feedItems.get(i).getPubDate())));
+				item.put("pubDate", feedItems.get(i).getPubDate(this));
 				feedItemsList.add(item);
 			}
 			
 			// add feed items to ListView
 			SimpleAdapter adapter = new SimpleAdapter(this, feedItemsList, android.R.layout.simple_list_item_2, new String[] {"title", "pubDate"}, new int[] {android.R.id.text1, android.R.id.text2});
-			final ListView lstContacts = (ListView)findViewById(R.id.listViewFeedItems);
-			lstContacts.setAdapter(adapter);
+			final ListView lstFeedItems = (ListView)findViewById(R.id.listViewFeedItems);
+			lstFeedItems.setAdapter(adapter);
+			
+			lstFeedItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+				@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+					FeedItem currentFeedItem = feedItems.get(position);
+					Bundle bundle = new Bundle();
+					bundle.putSerializable("feedItem", currentFeedItem);
+					Intent intent = new Intent(parent.getContext(), FeedItemActivity.class);
+					intent.putExtras(bundle);
+					startActivityForResult(intent, 0);
+				}
+			});
 		}
 	}
 	

@@ -50,6 +50,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="ca.brocku.cosc.jb08tu.cosc3v97project.FeedActivity" />
         </activity>
+        <activity
+            android:name=".FeedItemActivity"
+            android:label="@string/title_activity_feed_item" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.FeedActivity" />
+        </activity>
     </application>
 
 </manifest>

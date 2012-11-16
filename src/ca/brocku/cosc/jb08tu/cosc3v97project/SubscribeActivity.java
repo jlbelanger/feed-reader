@@ -2,6 +2,9 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -37,8 +40,19 @@ public class SubscribeActivity extends Activity {
 				// get EditText value
 				String url = txtURL.getText().toString();
 				
+				if(!Utilities.isValidURL(url)) {
+					Builder dialog = new AlertDialog.Builder(SubscribeActivity.this);
+					dialog.setMessage("This is not a valid RSS file.");
+					dialog.setPositiveButton("OK", null);
+					dialog.show();
+					return;
+				}
+				
+				// get feed name
+				String name = Utilities.getFeedTitle(url);
+				
 				// update database
-				mDatabase.addFeed(mDB, Utilities.getFeedTitle(url), url);
+				mDatabase.addFeed(mDB, name, url);
 				
 				// return to main activity
 				Intent intent = new Intent(v.getContext(), MainActivity.class);

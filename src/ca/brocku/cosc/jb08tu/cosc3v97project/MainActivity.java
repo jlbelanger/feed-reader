@@ -16,6 +16,10 @@ import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
+//TODO check for valid xml files
+//show subscribe link if not subscribed to any feeds
+//check for network connection
+
 public class MainActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
 	protected Cursor				mCursor		= null;

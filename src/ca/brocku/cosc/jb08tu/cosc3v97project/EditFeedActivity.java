@@ -19,13 +19,13 @@ public class EditFeedActivity extends Activity {
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_edit_feed);
+		
+		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
+		mDB = mDatabase.getWritableDatabase();
 	}
 	
 	@Override public void onStart() {
 		super.onStart();
-		
-		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
-		mDB = mDatabase.getWritableDatabase();
 		
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {

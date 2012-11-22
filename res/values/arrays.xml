@@ -19,8 +19,8 @@
         <item>13:00</item>
     </string-array>
     <string-array name="time_format_values">
-        <item>hh:mm a</item>
-        <item>kk:mm</item>
+        <item>h:mm a</item>
+        <item>H:mm</item>
     </string-array>
 
 </resources>

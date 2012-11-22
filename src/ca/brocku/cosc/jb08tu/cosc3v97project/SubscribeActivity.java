@@ -7,6 +7,7 @@ import android.app.AlertDialog.Builder;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,13 +23,13 @@ public class SubscribeActivity extends Activity {
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_subscribe);
+		
+		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
+		mDB = mDatabase.getWritableDatabase();
 	}
 	
 	@Override public void onStart() {
 		super.onStart();
-		
-		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
-		mDB = mDatabase.getWritableDatabase();
 		
 		final Button btnSubscribe = (Button)findViewById(R.id.buttonSubscribe);
 		btnSubscribe.setOnClickListener(new View.OnClickListener() {
@@ -37,7 +38,10 @@ public class SubscribeActivity extends Activity {
 				final EditText txtURL = (EditText)findViewById(R.id.editTextURL);
 				
 				// get EditText value
-				String url = txtURL.getText().toString();
+				String url = txtURL.getText().toString().trim();
+				if(!url.startsWith("http")) {
+					url = "http://" + url;
+				}
 				
 				if(!Utilities.isValidURL(url)) {
 					Builder dialog = new AlertDialog.Builder(SubscribeActivity.this);

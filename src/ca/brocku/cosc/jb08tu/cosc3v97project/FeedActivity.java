@@ -29,59 +29,65 @@ public class FeedActivity extends Activity {
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_feed);
+		
+		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
+		mDB = mDatabase.getWritableDatabase();
 	}
 	
 	@Override public void onStart() {
 		super.onStart();
 		
-		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
-		mDB = mDatabase.getWritableDatabase();
-		
-		Bundle bundle = this.getIntent().getExtras();
-		if(bundle != null) {
-			// get feed id
-			feedId = "" + bundle.getLong("id");
-			feed = mDatabase.getFeed(mDB, feedId);
-			
-			// update interface
-			setTitle(feed.getName());
-			
-			// read feed items
-			final List<FeedItem> feedItems = Utilities.getFeedItems(feed.getURL());
-			
-			// create feed item map for adapter
-			List<Map<String, String>> feedItemsList = new ArrayList<Map<String, String>>();
-			int numItems = feedItems.size();
-			for(int i = 0; i < numItems; i++) {
-				Map<String, String> item = new HashMap<String, String>(2);
-				item.put("title", feedItems.get(i).getTitle());
-				item.put("pubDate", feedItems.get(i).getPubDate(this));
-				feedItemsList.add(item);
+		if(Utilities.hasNetworkConnection(this)) {
+			Bundle bundle = this.getIntent().getExtras();
+			if(bundle != null) {
+				// get feed id
+				feedId = "" + bundle.getLong("id");
+				feed = mDatabase.getFeed(mDB, feedId);
+				
+				// update interface
+				setTitle(feed.getName());
+				
+				// read feed items
+				final List<FeedItem> feedItems = Utilities.getFeedItems(feed.getURL());
+				
+				// create feed item map for adapter
+				List<Map<String, String>> feedItemsList = new ArrayList<Map<String, String>>();
+				int numItems = feedItems.size();
+				for(int i = 0; i < numItems; i++) {
+					Map<String, String> item = new HashMap<String, String>(2);
+					item.put("title", feedItems.get(i).getTitle());
+					item.put("pubDate", feedItems.get(i).getPubDate(this));
+					feedItemsList.add(item);
+				}
+				
+				// add feed items to ListView
+				SimpleAdapter adapter = new SimpleAdapter(this, feedItemsList, android.R.layout.simple_list_item_2, new String[] {"title", "pubDate"}, new int[] {android.R.id.text1, android.R.id.text2});
+				final ListView lstFeedItems = (ListView)findViewById(R.id.listViewFeedItems);
+				lstFeedItems.setAdapter(adapter);
+				
+				lstFeedItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+					@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+						FeedItem currentFeedItem = feedItems.get(position);
+						Bundle bundle = new Bundle();
+						bundle.putSerializable("feed", feed);
+						bundle.putSerializable("feedItem", currentFeedItem);
+						Intent intent = new Intent(parent.getContext(), FeedItemActivity.class);
+						intent.putExtras(bundle);
+						startActivityForResult(intent, 0);
+					}
+				});
 			}
-			
-			// add feed items to ListView
-			SimpleAdapter adapter = new SimpleAdapter(this, feedItemsList, android.R.layout.simple_list_item_2, new String[] {"title", "pubDate"}, new int[] {android.R.id.text1, android.R.id.text2});
-			final ListView lstFeedItems = (ListView)findViewById(R.id.listViewFeedItems);
-			lstFeedItems.setAdapter(adapter);
-			
-			lstFeedItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-				@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-					FeedItem currentFeedItem = feedItems.get(position);
-					Bundle bundle = new Bundle();
-					bundle.putSerializable("feed", feed);
-					bundle.putSerializable("feedItem", currentFeedItem);
-					Intent intent = new Intent(parent.getContext(), FeedItemActivity.class);
-					intent.putExtras(bundle);
+		}
+		else {
+			Builder dialog = new AlertDialog.Builder(FeedActivity.this);
+			dialog.setMessage(R.string.message_no_network);
+			dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					Intent intent = new Intent(FeedActivity.this, MainActivity.class);
 					startActivityForResult(intent, 0);
 				}
 			});
-		}
-
-		if(mDB != null) {
-			mDB.close();
-		}
-		if(mDatabase != null) {
-			mDatabase.close();
+			dialog.show();
 		}
 	}
 	
@@ -130,5 +136,15 @@ public class FeedActivity extends Activity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override protected void onDestroy() {
+		super.onDestroy();
+		if(mDB != null) {
+			mDB.close();
+		}
+		if(mDatabase != null) {
+			mDatabase.close();
+		}
 	}
 }

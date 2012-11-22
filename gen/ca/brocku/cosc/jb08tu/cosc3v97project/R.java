@@ -69,6 +69,8 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f060000;
+        public static final int default_date=0x7f060018;
+        public static final int default_time=0x7f060017;
         public static final int editfeed_button=0x7f060011;
         public static final int editfeed_name=0x7f06000d;
         public static final int editfeed_name_hint=0x7f06000e;

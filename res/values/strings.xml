@@ -23,5 +23,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_feed_item">FeedItemActivity</string>
     <string name="message_no_network">You aren\'t connected to the internet, so this app is pretty useless.</string>
-
+    <string name="default_time">H:mm</string>
+    <string name="default_date">yyyy/MM/dd</string>
+    
 </resources>

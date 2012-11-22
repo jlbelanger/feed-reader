@@ -27,6 +27,9 @@ public class MainActivity extends Activity {
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
+		mDB = mDatabase.getReadableDatabase();
 	}
 	
 	@Override public void onStart() {
@@ -35,9 +38,6 @@ public class MainActivity extends Activity {
 		TextView txtNoNetwork = (TextView)findViewById(R.id.textViewNetworkConnection);
 		if(Utilities.hasNetworkConnection(this)) {
 			txtNoNetwork.setVisibility(View.INVISIBLE);
-			
-			mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
-			mDB = mDatabase.getReadableDatabase();
 			
 			SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 			queryBuilder.setTables(Feeds.FEEDS_TABLE_NAME);
@@ -75,13 +75,6 @@ public class MainActivity extends Activity {
 					}
 				});
 			}
-			
-			if(mDB != null) {
-				mDB.close();
-			}
-			if(mDatabase != null) {
-				mDatabase.close();
-			}
 		}
 		else {
 			txtNoNetwork.setVisibility(View.VISIBLE);
@@ -99,6 +92,16 @@ public class MainActivity extends Activity {
 		MenuItem menuItem = menu.findItem(menuId);
 		if(menuItem != null) {
 			menuItem.setIntent(intent);
+		}
+	}
+
+	@Override protected void onDestroy() {
+		super.onDestroy();
+		if(mDB != null) {
+			mDB.close();
+		}
+		if(mDatabase != null) {
+			mDatabase.close();
 		}
 	}
 }

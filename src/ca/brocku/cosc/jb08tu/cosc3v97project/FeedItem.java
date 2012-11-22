@@ -12,16 +12,18 @@ public class FeedItem implements Serializable {
 	private String				pubDate;
 	private String				link;
 	private String				description;
+	private String				contentEncoded;
 	
 	public FeedItem() {
-		this("", "", "", "");
+		this("", "", "", "", "");
 	}
 	
-	public FeedItem(String t, String p, String l, String d) {
+	public FeedItem(String t, String p, String l, String d, String c) {
 		this.title = t;
 		this.pubDate = p;
 		this.link = l;
 		this.description = d;
+		this.contentEncoded = c;
 	}
 	
 	public String getTitle() {
@@ -37,8 +39,13 @@ public class FeedItem implements Serializable {
 		return this.link;
 	}
 	
-	public String getDescription() {
-		return this.description;
+	public String getContent() {
+		int descLength = this.description.length();
+		int contentLength = this.contentEncoded.length();
+		if(descLength > contentLength) {
+			return this.description;
+		}
+		return this.contentEncoded;
 	}
 	
 	public String toString() {

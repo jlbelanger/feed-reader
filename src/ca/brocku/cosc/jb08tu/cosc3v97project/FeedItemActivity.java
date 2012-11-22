@@ -8,6 +8,7 @@ import android.widget.TextView;
 import android.support.v4.app.NavUtils;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
+import android.text.method.ScrollingMovementMethod;
 
 public class FeedItemActivity extends Activity {
 	@Override public void onCreate(Bundle savedInstanceState) {
@@ -38,7 +39,8 @@ public class FeedItemActivity extends Activity {
 			txtTitle.setText(Html.fromHtml("<a href=\"" + feedItem.getLink() + "\">" + feedItem.getTitle() + "</a>"));
 			txtTitle.setMovementMethod(LinkMovementMethod.getInstance());
 			txtDate.setText(feedItem.getPubDate(this));
-			txtContent.setText(Html.fromHtml(feedItem.getDescription()));
+			txtContent.setText(Html.fromHtml(feedItem.getContent()));
+			txtContent.setMovementMethod(new ScrollingMovementMethod());
 		}
 		
 	}
@@ -56,5 +58,4 @@ public class FeedItemActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
 }

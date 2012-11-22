@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.util.Log;
 
 public class Utilities {
 	public static boolean hasNetworkConnection(Context context) {
@@ -93,8 +94,8 @@ public class Utilities {
 	
 	public static SimpleDateFormat getDateFormatter(Context context) {
 		SharedPreferences preferences = context.getSharedPreferences("preferences", 0);
-		String dateFormat = preferences.getString("date_format", "yyyy/MM/dd");
-		String timeFormat = preferences.getString("time_format", "HH:mm");
+		String dateFormat = preferences.getString("date_format", context.getString(R.string.default_date));
+		String timeFormat = preferences.getString("time_format", context.getString(R.string.default_time));
 		return new SimpleDateFormat(dateFormat + ", " + timeFormat);
 	}
 	
@@ -112,7 +113,7 @@ public class Utilities {
 			FeedItem currentItem = null;
 			int eventType = -1;
 			String tagName = "";
-			String title = "", pubDate = "", link = "", description = "";
+			String title = "", pubDate = "", link = "", description = "", contentEncoded = "";
 			boolean start = false;
 			
 			while(eventType != XmlPullParser.END_DOCUMENT) {
@@ -135,23 +136,27 @@ public class Utilities {
 					else if(tagName.equals("description") && description.equals("")) {
 						description = xmlPullParser.getText();
 					}
+					else if(tagName.equals("encoded") && contentEncoded.equals("")) {
+						contentEncoded = xmlPullParser.getText();
+					}
 				}
 				else if(start && eventType == XmlPullParser.END_TAG) {
 					tagName = xmlPullParser.getName();
 					if(tagName.equals("item")) {
-						currentItem = new FeedItem(title, pubDate, link, description);
+						currentItem = new FeedItem(title, pubDate, link, description, contentEncoded);
 						feedItems.add(currentItem);
 						title = "";
 						pubDate = "";
 						link = "";
 						description = "";
+						contentEncoded = "";
 					}
 				}
 				eventType = xmlPullParser.next();
 			}
 			
 			if(!title.equals("")) {
-				currentItem = new FeedItem(title, pubDate, link, description);
+				currentItem = new FeedItem(title, pubDate, link, description, contentEncoded);
 				feedItems.add(currentItem);
 			}
 		}

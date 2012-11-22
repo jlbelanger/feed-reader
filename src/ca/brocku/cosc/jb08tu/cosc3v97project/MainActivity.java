@@ -13,12 +13,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-
-//TODO check for valid xml files
-//show subscribe link if not subscribed to any feeds
-//check for network connection
+import android.widget.TableLayout;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -33,30 +32,60 @@ public class MainActivity extends Activity {
 	@Override public void onStart() {
 		super.onStart();
 		
-		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
-		mDB = mDatabase.getReadableDatabase();
-		
-		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
-		queryBuilder.setTables(Feeds.FEEDS_TABLE_NAME);
-		
-		String columns[] = {Feeds._ID, Feeds.FEED_NAME};
-		mCursor = queryBuilder.query(mDB, columns, null, null, null, null, Feeds.DEFAULT_SORT_ORDER);
-		startManagingCursor(mCursor);
-		
-		ListAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, mCursor, new String[] {Feeds.FEED_NAME}, new int[] {android.R.id.text1});
-		
-		final ListView lstContacts = (ListView)findViewById(R.id.listViewFeeds);
-		lstContacts.setAdapter(adapter);
-		
-		lstContacts.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				Bundle bundle = new Bundle();
-				bundle.putLong("id", id);
-				Intent intent = new Intent(parent.getContext(), FeedActivity.class);
-				intent.putExtras(bundle);
-				startActivityForResult(intent, 0);
+		TextView txtNoNetwork = (TextView)findViewById(R.id.textViewNetworkConnection);
+		if(Utilities.hasNetworkConnection(this)) {
+			txtNoNetwork.setVisibility(View.INVISIBLE);
+			
+			mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
+			mDB = mDatabase.getReadableDatabase();
+			
+			SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+			queryBuilder.setTables(Feeds.FEEDS_TABLE_NAME);
+			
+			String columns[] = {Feeds._ID, Feeds.FEED_NAME};
+			mCursor = queryBuilder.query(mDB, columns, null, null, null, null, Feeds.DEFAULT_SORT_ORDER);
+			startManagingCursor(mCursor);
+			
+			if(mCursor.getCount() > 0) {
+				ListAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, mCursor, new String[] {Feeds.FEED_NAME}, new int[] {android.R.id.text1});
+				
+				final ListView lstContacts = (ListView)findViewById(R.id.listViewFeeds);
+				lstContacts.setAdapter(adapter);
+				
+				lstContacts.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+					@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+						Bundle bundle = new Bundle();
+						bundle.putLong("id", id);
+						Intent intent = new Intent(parent.getContext(), FeedActivity.class);
+						intent.putExtras(bundle);
+						startActivityForResult(intent, 0);
+					}
+				});
 			}
-		});
+			else {
+				Button btnSubscribe = new Button(this);
+				btnSubscribe.setText(R.string.menu_subscribe);
+				TableLayout layout = (TableLayout)findViewById(R.id.layoutMain);
+				layout.addView(btnSubscribe);
+				
+				btnSubscribe.setOnClickListener(new View.OnClickListener() {
+					@Override public void onClick(View v) {
+						Intent intent = new Intent(v.getContext(), SubscribeActivity.class);
+						startActivityForResult(intent, 0);
+					}
+				});
+			}
+			
+			if(mDB != null) {
+				mDB.close();
+			}
+			if(mDatabase != null) {
+				mDatabase.close();
+			}
+		}
+		else {
+			txtNoNetwork.setVisibility(View.VISIBLE);
+		}
 	}
 	
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -70,16 +99,6 @@ public class MainActivity extends Activity {
 		MenuItem menuItem = menu.findItem(menuId);
 		if(menuItem != null) {
 			menuItem.setIntent(intent);
-		}
-	}
-	
-	@Override protected void onDestroy() {
-		super.onDestroy();
-		if(mDB != null) {
-			mDB.close();
-		}
-		if(mDatabase != null) {
-			mDatabase.close();
 		}
 	}
 }

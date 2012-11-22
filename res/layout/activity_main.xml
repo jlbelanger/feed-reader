@@ -1,12 +1,28 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="10dp" >
 
-    <ListView
-        android:id="@+id/listViewFeeds"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-    </ListView>
+    <TableLayout
+        android:id="@+id/layoutMain"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:stretchColumns="*" >
+
+        <ListView
+            android:id="@+id/listViewFeeds"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+        </ListView>
+
+        <TextView
+            android:id="@+id/textViewNetworkConnection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/message_no_network" >
+
+        </TextView>
+    </TableLayout>
 
 </RelativeLayout>

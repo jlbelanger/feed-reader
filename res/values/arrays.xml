@@ -1,0 +1,26 @@
+<resources>
+
+    <string-array name="date_formats">
+        <item>31/12/2000</item>
+        <item>12/31/2000</item>
+        <item>2000/12/31</item>
+        <item>Dec 31, 2000</item>
+        <item>December 31, 2000</item>
+    </string-array>
+    <string-array name="date_format_values">
+        <item>dd/MM/yyyy</item>
+        <item>MM/dd/yyyy</item>
+        <item>yyyy/MM/dd</item>
+        <item>MMM d, yyyy</item>
+        <item>MMMM d, yyyy</item>
+    </string-array>
+    <string-array name="time_formats">
+        <item>1:00 PM</item>
+        <item>13:00</item>
+    </string-array>
+    <string-array name="time_format_values">
+        <item>hh:mm a</item>
+        <item>kk:mm</item>
+    </string-array>
+
+</resources>

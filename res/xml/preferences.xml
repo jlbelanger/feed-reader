@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="Settings" >
+        <ListPreference
+            android:dialogTitle="@string/settings_date_format"
+            android:entries="@array/date_formats"
+            android:entryValues="@array/date_format_values"
+            android:key="date_format"
+            android:title="@string/settings_date_format" />
+        <ListPreference
+            android:dialogTitle="@string/settings_time_format"
+            android:entries="@array/time_formats"
+            android:entryValues="@array/time_format_values"
+            android:key="time_format"
+            android:title="@string/settings_time_format" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

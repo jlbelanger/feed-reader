@@ -22,5 +22,6 @@
     <string name="settings_time_format">Time Format</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_feed_item">FeedItemActivity</string>
+    <string name="message_no_network">You aren\'t connected to the internet, so this app is pretty useless.</string>
 
 </resources>

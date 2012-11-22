@@ -1,47 +1,52 @@
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="10dp"
-    android:stretchColumns="*" >
+    android:padding="10dp" >
 
-    <TableRow
-        android:id="@+id/tableRow1"
+    <TableLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:stretchColumns="*" >
 
-        <TextView
-            android:id="@+id/textViewSubscribe"
+        <TableRow
+            android:id="@+id/subscribe_tableRow1"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/subscribe_textview" />
-    </TableRow>
+            android:layout_height="wrap_content" >
 
-    <TableRow
-        android:id="@+id/tableRow2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
+            <TextView
+                android:id="@+id/textViewSubscribe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/subscribe_textview" />
+        </TableRow>
 
-        <EditText
-            android:id="@+id/editTextURL"
+        <TableRow
+            android:id="@+id/subscribe_tableRow2"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="@string/subscribe_hint" >
+            android:layout_height="wrap_content" >
 
-            <requestFocus />
-        </EditText>
-    </TableRow>
+            <EditText
+                android:id="@+id/editTextURL"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="@string/subscribe_hint" >
 
-    <TableRow
-        android:id="@+id/tableRow3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
+                <requestFocus />
+            </EditText>
+        </TableRow>
 
-        <Button
-            android:id="@+id/buttonSubscribe"
+        <TableRow
+            android:id="@+id/subscribe_tableRow3"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/subscribe_button" />
-    </TableRow>
+            android:layout_height="wrap_content" >
 
-</TableLayout>
+            <Button
+                android:id="@+id/buttonSubscribe"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/subscribe_button" />
+        </TableRow>
+    </TableLayout>
+
+</RelativeLayout>

@@ -68,12 +68,20 @@ public class FeedActivity extends Activity {
 				@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					FeedItem currentFeedItem = feedItems.get(position);
 					Bundle bundle = new Bundle();
+					bundle.putSerializable("feed", feed);
 					bundle.putSerializable("feedItem", currentFeedItem);
 					Intent intent = new Intent(parent.getContext(), FeedItemActivity.class);
 					intent.putExtras(bundle);
 					startActivityForResult(intent, 0);
 				}
 			});
+		}
+
+		if(mDB != null) {
+			mDB.close();
+		}
+		if(mDatabase != null) {
+			mDatabase.close();
 		}
 	}
 	
@@ -122,15 +130,5 @@ public class FeedActivity extends Activity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}
-	
-	@Override protected void onDestroy() {
-		super.onDestroy();
-		if(mDB != null) {
-			mDB.close();
-		}
-		if(mDatabase != null) {
-			mDatabase.close();
-		}
 	}
 }

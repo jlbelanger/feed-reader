@@ -3,26 +3,33 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 public class Utilities {
+	public static boolean hasNetworkConnection(Context context) {
+		ConnectivityManager connectivityManager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+		if(networkInfo != null && networkInfo.isAvailable() && networkInfo.isConnected()) {
+			return true;
+		}
+		return false;
+	}
+	
 	public static boolean isValidURL(String sURL) {
 		try {
 			URL url = new URL(sURL);
@@ -30,16 +37,12 @@ public class Utilities {
 			httpURLConnection.setRequestMethod("HEAD");
 			httpURLConnection.connect();
 			
-			Map headerfields = httpURLConnection.getHeaderFields();
-			Set headers = headerfields.entrySet();
-			for(Iterator i = headers.iterator(); i.hasNext();) {
-				Map.Entry map = (Map.Entry)i.next();
-				Log.i("feed", map.getKey() + " : " + map.getValue());
-			}
-			
-			Log.i("feed", headerfields.get(arg0));
-			
 			if(httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+				Map<String, List<String>> headerfields = httpURLConnection.getHeaderFields();
+				String contentType = headerfields.get("content-type").toString();
+				if(!contentType.contains("text/xml")) {
+					return false;
+				}
 				return true;
 			}
 		}

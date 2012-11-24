@@ -38,7 +38,7 @@ public class FeedItemActivity extends Activity {
 			// set TextView
 			txtTitle.setText(Html.fromHtml("<a href=\"" + feedItem.getLink() + "\">" + feedItem.getTitle() + "</a>"));
 			txtTitle.setMovementMethod(LinkMovementMethod.getInstance());
-			txtDate.setText(feedItem.getPubDate(this));
+			txtDate.setText(feedItem.getPrettyDate(this));
 			txtContent.setText(Html.fromHtml(feedItem.getContent()));
 			txtContent.setMovementMethod(new ScrollingMovementMethod());
 		}

@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -99,13 +100,19 @@ public class Utilities {
 		return new SimpleDateFormat(dateFormat + ", " + timeFormat);
 	}
 	
-	public static List<FeedItem> getFeedItems(String sURL) {
+	public static SimpleDateFormat getDefaultDateFormatter(Context context) {
+		String dateFormat = context.getString(R.string.default_date);
+		String timeFormat = context.getString(R.string.default_time);
+		return new SimpleDateFormat(dateFormat + ", " + timeFormat);
+	}
+	
+	public static List<FeedItem> getNewFeedItems(Feed feed) {
 		List<FeedItem> feedItems = new LinkedList<FeedItem>();
 		try {
 			XmlPullParserFactory xmlPullParserFactory = XmlPullParserFactory.newInstance();
 			xmlPullParserFactory.setNamespaceAware(true);
 			XmlPullParser xmlPullParser = xmlPullParserFactory.newPullParser();
-			URL url = new URL(sURL);
+			URL url = new URL(feed.getURL());
 			InputStream inputStream = url.openStream();
 			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 			xmlPullParser.setInput(inputStreamReader);
@@ -143,7 +150,7 @@ public class Utilities {
 				else if(start && eventType == XmlPullParser.END_TAG) {
 					tagName = xmlPullParser.getName();
 					if(tagName.equals("item")) {
-						currentItem = new FeedItem(title, pubDate, link, description, contentEncoded);
+						currentItem = new FeedItem("", feed.getId(), title, pubDate, link, description, contentEncoded);
 						feedItems.add(currentItem);
 						title = "";
 						pubDate = "";
@@ -156,13 +163,14 @@ public class Utilities {
 			}
 			
 			if(!title.equals("")) {
-				currentItem = new FeedItem(title, pubDate, link, description, contentEncoded);
+				currentItem = new FeedItem("", feed.getId(), title, pubDate, link, description, contentEncoded);
 				feedItems.add(currentItem);
 			}
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
+		
 		return feedItems;
 	}
 }

@@ -22,7 +22,8 @@ public final class R {
     }
     public static final class id {
         public static final int buttonEditFeed=0x7f090009;
-        public static final int buttonSubscribe=0x7f090018;
+        public static final int buttonRefresh=0x7f090014;
+        public static final int buttonSubscribe=0x7f090019;
         public static final int editFeed_tableRow1=0x7f090000;
         public static final int editFeed_tableRow2=0x7f090002;
         public static final int editFeed_tableRow3=0x7f090004;
@@ -36,19 +37,19 @@ public final class R {
         public static final int layoutMain=0x7f090011;
         public static final int listViewFeedItems=0x7f09000a;
         public static final int listViewFeeds=0x7f090012;
-        public static final int menu_edit_feed=0x7f090019;
-        public static final int menu_settings=0x7f09001c;
-        public static final int menu_subscribe=0x7f09001b;
-        public static final int menu_unsubscribe=0x7f09001a;
-        public static final int subscribe_tableRow1=0x7f090014;
-        public static final int subscribe_tableRow2=0x7f090016;
-        public static final int subscribe_tableRow3=0x7f090017;
+        public static final int menu_edit_feed=0x7f09001a;
+        public static final int menu_settings=0x7f09001d;
+        public static final int menu_subscribe=0x7f09001c;
+        public static final int menu_unsubscribe=0x7f09001b;
+        public static final int subscribe_tableRow1=0x7f090015;
+        public static final int subscribe_tableRow2=0x7f090017;
+        public static final int subscribe_tableRow3=0x7f090018;
         public static final int textViewContent=0x7f090010;
         public static final int textViewDate=0x7f09000e;
         public static final int textViewFeedName=0x7f090001;
         public static final int textViewFeedURL=0x7f090005;
         public static final int textViewNetworkConnection=0x7f090013;
-        public static final int textViewSubscribe=0x7f090015;
+        public static final int textViewSubscribe=0x7f090016;
         public static final int textViewTitle=0x7f09000c;
     }
     public static final class layout {
@@ -69,27 +70,28 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f060000;
-        public static final int default_date=0x7f060018;
-        public static final int default_time=0x7f060017;
-        public static final int editfeed_button=0x7f060011;
-        public static final int editfeed_name=0x7f06000d;
-        public static final int editfeed_name_hint=0x7f06000e;
-        public static final int editfeed_url=0x7f06000f;
-        public static final int editfeed_url_hint=0x7f060010;
-        public static final int hello_world=0x7f060014;
+        public static final int default_date=0x7f060019;
+        public static final int default_time=0x7f060018;
+        public static final int editfeed_button=0x7f060012;
+        public static final int editfeed_name=0x7f06000e;
+        public static final int editfeed_name_hint=0x7f06000f;
+        public static final int editfeed_url=0x7f060010;
+        public static final int editfeed_url_hint=0x7f060011;
+        public static final int hello_world=0x7f060015;
         public static final int menu_edit_feed=0x7f060004;
         public static final int menu_settings=0x7f060001;
         public static final int menu_subscribe=0x7f060002;
         public static final int menu_unsubscribe=0x7f060003;
-        public static final int message_no_network=0x7f060016;
-        public static final int settings_date_format=0x7f060012;
-        public static final int settings_time_format=0x7f060013;
+        public static final int message_no_network=0x7f060017;
+        public static final int refresh_button=0x7f06000c;
+        public static final int settings_date_format=0x7f060013;
+        public static final int settings_time_format=0x7f060014;
         public static final int subscribe_button=0x7f06000b;
-        public static final int subscribe_hint=0x7f06000c;
+        public static final int subscribe_hint=0x7f06000d;
         public static final int subscribe_textview=0x7f06000a;
         public static final int title_activity_edit_feed=0x7f060009;
         public static final int title_activity_feed=0x7f060008;
-        public static final int title_activity_feed_item=0x7f060015;
+        public static final int title_activity_feed_item=0x7f060016;
         public static final int title_activity_main=0x7f060005;
         public static final int title_activity_settings=0x7f060007;
         public static final int title_activity_subscribe=0x7f060006;

@@ -30,7 +30,7 @@ public class EditFeedActivity extends Activity {
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {
 			// get feed id
-			id = "" + bundle.getLong("id");
+			id = bundle.getString("id");
 			Feed feed = mDatabase.getFeed(mDB, id);
 			
 			// update interface

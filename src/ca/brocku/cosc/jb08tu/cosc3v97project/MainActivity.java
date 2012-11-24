@@ -1,5 +1,10 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 
 import android.os.Bundle;
@@ -8,14 +13,13 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
@@ -30,54 +34,32 @@ public class MainActivity extends Activity {
 		
 		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
 		mDB = mDatabase.getReadableDatabase();
+		
+		//mDB.execSQL("DELETE FROM " + Feeds.FEED_ITEMS_TABLE_NAME + ";");
 	}
 	
 	@Override public void onStart() {
 		super.onStart();
+		checkForNetworkConnection();
+	}
+	
+	private void checkForNetworkConnection() {
+		final TextView txtNoNetwork = (TextView)findViewById(R.id.textViewNetworkConnection);
+		final Button btnRefresh = (Button)findViewById(R.id.buttonRefresh);
 		
-		TextView txtNoNetwork = (TextView)findViewById(R.id.textViewNetworkConnection);
 		if(Utilities.hasNetworkConnection(this)) {
 			txtNoNetwork.setVisibility(View.INVISIBLE);
-			
-			SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
-			queryBuilder.setTables(Feeds.FEEDS_TABLE_NAME);
-			
-			String columns[] = {Feeds._ID, Feeds.FEED_NAME};
-			mCursor = queryBuilder.query(mDB, columns, null, null, null, null, Feeds.DEFAULT_SORT_ORDER);
-			startManagingCursor(mCursor);
-			
-			if(mCursor.getCount() > 0) {
-				ListAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, mCursor, new String[] {Feeds.FEED_NAME}, new int[] {android.R.id.text1});
-				
-				final ListView lstContacts = (ListView)findViewById(R.id.listViewFeeds);
-				lstContacts.setAdapter(adapter);
-				
-				lstContacts.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-					@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-						Bundle bundle = new Bundle();
-						bundle.putLong("id", id);
-						Intent intent = new Intent(parent.getContext(), FeedActivity.class);
-						intent.putExtras(bundle);
-						startActivityForResult(intent, 0);
-					}
-				});
-			}
-			else {
-				Button btnSubscribe = new Button(this);
-				btnSubscribe.setText(R.string.menu_subscribe);
-				TableLayout layout = (TableLayout)findViewById(R.id.layoutMain);
-				layout.addView(btnSubscribe);
-				
-				btnSubscribe.setOnClickListener(new View.OnClickListener() {
-					@Override public void onClick(View v) {
-						Intent intent = new Intent(v.getContext(), SubscribeActivity.class);
-						startActivityForResult(intent, 0);
-					}
-				});
-			}
+			btnRefresh.setVisibility(View.INVISIBLE);
+			loadFeedsFromDatabase();
 		}
 		else {
 			txtNoNetwork.setVisibility(View.VISIBLE);
+			btnRefresh.setVisibility(View.VISIBLE);
+			btnRefresh.setOnClickListener(new View.OnClickListener() {
+				@Override public void onClick(View v) {
+					checkForNetworkConnection();
+				}
+			});
 		}
 	}
 	
@@ -94,7 +76,7 @@ public class MainActivity extends Activity {
 			menuItem.setIntent(intent);
 		}
 	}
-
+	
 	@Override protected void onDestroy() {
 		super.onDestroy();
 		if(mDB != null) {
@@ -102,6 +84,65 @@ public class MainActivity extends Activity {
 		}
 		if(mDatabase != null) {
 			mDatabase.close();
+		}
+	}
+	
+	private void loadFeedsFromDatabase() {
+		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+		queryBuilder.setTables(Feeds.FEEDS_TABLE_NAME);
+		
+		String columns[] = {Feeds._ID, Feeds.FEED_NAME};
+		mCursor = queryBuilder.query(mDB, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
+		startManagingCursor(mCursor);
+		
+		if(mCursor.getCount() > 0) {
+			// create feed item map for adapter
+			List<Map<String, String>> feedList = new ArrayList<Map<String, String>>();
+			mCursor.moveToFirst();
+			int count = mCursor.getCount();
+			String[] numItems = new String[count];
+			int num = 0;
+			for(int i = 0; i < count; i++) {
+				num = mDatabase.getNumUnreadFeedItems(mDB, mCursor.getString(0));
+				numItems[i] = num + " item";
+				if(num != 1) {
+					numItems[i] = numItems[i] + "s";
+				}
+				Map<String, String> item = new HashMap<String, String>(2);
+				item.put("title", mCursor.getString(1));
+				item.put("numItems", numItems[i]);
+				feedList.add(item);
+				mCursor.moveToNext();
+			}
+			
+			// add feed items to ListView
+			SimpleAdapter adapter = new SimpleAdapter(this, feedList, android.R.layout.simple_list_item_2, new String[] {"title", "numItems"}, new int[] {android.R.id.text1, android.R.id.text2});
+			final ListView lstFeeds = (ListView)findViewById(R.id.listViewFeeds);
+			lstFeeds.setAdapter(adapter);
+			
+			lstFeeds.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+				@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+					Bundle bundle = new Bundle();
+					mCursor.moveToPosition(position);
+					bundle.putString("id", mCursor.getString(0));
+					Intent intent = new Intent(parent.getContext(), FeedActivity.class);
+					intent.putExtras(bundle);
+					startActivityForResult(intent, 0);
+				}
+			});
+		}
+		else {
+			Button btnSubscribe = new Button(this);
+			btnSubscribe.setText(R.string.menu_subscribe);
+			TableLayout layout = (TableLayout)findViewById(R.id.layoutMain);
+			layout.addView(btnSubscribe);
+			
+			btnSubscribe.setOnClickListener(new View.OnClickListener() {
+				@Override public void onClick(View v) {
+					Intent intent = new Intent(v.getContext(), SubscribeActivity.class);
+					startActivityForResult(intent, 0);
+				}
+			});
 		}
 	}
 }

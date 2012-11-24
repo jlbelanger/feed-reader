@@ -1,11 +1,20 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 class FeedDatabaseHelper extends SQLiteOpenHelper {
 	private static final String	DATABASE_NAME		= "feeds.db";
@@ -40,27 +49,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_NAME, name);
 			contentValues.put(Feeds.FEED_URL, url);
-			
 			mDB.insert(Feeds.FEEDS_TABLE_NAME, null, contentValues);
-			mDB.setTransactionSuccessful();
-		}
-		finally {
-			mDB.endTransaction();
-		}
-	}
-	
-	public void addFeedItem(SQLiteDatabase mDB, String feedId, String title, String pubDate, String link, String description, String contentEncoded) {
-		mDB.beginTransaction();
-		try {
-			ContentValues contentValues = new ContentValues();
-			contentValues.put(Feeds.FEED_ITEM_FEED_ID, feedId);
-			contentValues.put(Feeds.FEED_ITEM_TITLE, title);
-			contentValues.put(Feeds.FEED_ITEM_PUB_DATE, pubDate);
-			contentValues.put(Feeds.FEED_ITEM_LINK, link);
-			contentValues.put(Feeds.FEED_ITEM_DESCRIPTION, description);
-			contentValues.put(Feeds.FEED_ITEM_CONTENT_ENCODED, contentEncoded);
-			
-			mDB.insert(Feeds.FEED_ITEMS_TABLE_NAME, null, contentValues);
 			mDB.setTransactionSuccessful();
 		}
 		finally {
@@ -71,15 +60,15 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 	public void addFeedItem(Context context, SQLiteDatabase mDB, FeedItem feedItem) {
 		mDB.beginTransaction();
 		try {
+			Log.i("feeddd", "---add feed item with date " + feedItem.getSortDate());
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_ITEM_FEED_ID, feedItem.getFeedId());
 			contentValues.put(Feeds.FEED_ITEM_TITLE, feedItem.getTitle());
-			contentValues.put(Feeds.FEED_ITEM_PUB_DATE, feedItem.getDate(context));
+			contentValues.put(Feeds.FEED_ITEM_PUB_DATE, feedItem.getSortDate());
 			contentValues.put(Feeds.FEED_ITEM_LINK, feedItem.getLink());
 			contentValues.put(Feeds.FEED_ITEM_DESCRIPTION, feedItem.getDescription());
 			contentValues.put(Feeds.FEED_ITEM_CONTENT_ENCODED, feedItem.getContent());
 			contentValues.put(Feeds.FEED_ITEM_IS_READ, 0);
-			
 			mDB.insert(Feeds.FEED_ITEMS_TABLE_NAME, null, contentValues);
 			mDB.setTransactionSuccessful();
 		}
@@ -88,14 +77,13 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
-	public void editFeed(SQLiteDatabase mDB, String id, String name, String url) {
+	public void editFeed(SQLiteDatabase mDB, String feedId, String name, String url) {
 		mDB.beginTransaction();
 		try {
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_NAME, name);
 			contentValues.put(Feeds.FEED_URL, url);
-			
-			mDB.update(Feeds.FEEDS_TABLE_NAME, contentValues, Feeds._ID + "=?", new String[] {id});
+			mDB.update(Feeds.FEEDS_TABLE_NAME, contentValues, Feeds._ID + "=?", new String[] {feedId});
 			mDB.setTransactionSuccessful();
 		}
 		finally {
@@ -103,10 +91,10 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
-	public void deleteFeed(SQLiteDatabase mDB, String id) {
+	public void deleteFeed(SQLiteDatabase mDB, String feedId) {
 		mDB.beginTransaction();
 		try {
-			mDB.delete(Feeds.FEEDS_TABLE_NAME, Feeds._ID + "=?", new String[] {id});
+			mDB.delete(Feeds.FEEDS_TABLE_NAME, Feeds._ID + "=?", new String[] {feedId});
 			mDB.setTransactionSuccessful();
 		}
 		finally {
@@ -114,13 +102,12 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
-	public void markFeedItemAsRead(SQLiteDatabase mDB, String id) {
+	public void markFeedItemAsRead(SQLiteDatabase mDB, String feedItemId) {
 		mDB.beginTransaction();
 		try {
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_ITEM_IS_READ, "1");
-			
-			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues, Feeds._ID + "=?", new String[] {id});
+			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues, Feeds._ID + "=?", new String[] {feedItemId});
 			mDB.setTransactionSuccessful();
 		}
 		finally {
@@ -128,26 +115,25 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
-	public Feed getFeed(SQLiteDatabase mDB, String id) {
+	public Feed getFeed(SQLiteDatabase mDB, String feedId) {
 		String columns[] = {Feeds.FEED_NAME, Feeds.FEED_URL};
-		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, Feeds._ID + "=?", new String[] {id}, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
+		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, Feeds._ID + "=?", new String[] {feedId}, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
 		mCursor.moveToFirst();
+		Feed feed = null;
 		if(mCursor.getCount() > 0) {
 			String name = mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_NAME));
 			String url = mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_URL));
-			mCursor.close();
-			return new Feed(id, name, url);
+			feed = new Feed(feedId, name, url);
 		}
-		else {
-			mCursor.close();
-			return null;
-		}
+		mCursor.close();
+		return feed;
 	}
 	
-	public FeedItem getFeedItem(SQLiteDatabase mDB, String id) {
+	public FeedItem getFeedItem(SQLiteDatabase mDB, String feedItemId) {
 		String columns[] = {Feeds.FEED_ITEM_FEED_ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_PUB_DATE, Feeds.FEED_ITEM_LINK, Feeds.FEED_ITEM_DESCRIPTION, Feeds.FEED_ITEM_CONTENT_ENCODED, Feeds.FEED_ITEM_IS_READ};
-		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, Feeds._ID + "=?", new String[] {id}, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
+		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, Feeds._ID + "=?", new String[] {feedItemId}, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
 		mCursor.moveToFirst();
+		FeedItem feedItem = null;
 		if(mCursor.getCount() > 0) {
 			String feedId = mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_FEED_ID));
 			String title = mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_TITLE));
@@ -160,13 +146,10 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 			if(strIsRead.equals("1")) {
 				isRead = true;
 			}
-			mCursor.close();
-			return new FeedItem(id, feedId, title, pubDate, link, description, contentEncoded, isRead);
+			feedItem = new FeedItem(feedItemId, feedId, title, pubDate, link, description, contentEncoded, isRead);
 		}
-		else {
-			mCursor.close();
-			return null;
-		}
+		mCursor.close();
+		return feedItem;
 	}
 	
 	public boolean doesFeedItemExist(SQLiteDatabase mDB, String feedId, String title, String pubDate) {
@@ -186,5 +169,58 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		int count = mCursor.getCount();
 		mCursor.close();
 		return count;
+	}
+	
+	public void addNewFeedItemsToDatabase(List<FeedItem> feedItems, Context context, SQLiteDatabase mDB) {
+		for(FeedItem feedItem : feedItems) {
+			if(!this.doesFeedItemExist(mDB, feedItem.getFeedId(), feedItem.getTitle(), feedItem.getSortDate())) {
+				this.addFeedItem(context, mDB, feedItem);
+			}
+		}
+	}
+	
+	public List<Map<String, String>> getFeedMap(SQLiteDatabase mDB, Cursor mCursor) {
+		List<Map<String, String>> feedList = new ArrayList<Map<String, String>>();
+		mCursor.moveToFirst();
+		int count = mCursor.getCount();
+		String[] numItems = new String[count];
+		int num = 0;
+		for(int i = 0; i < count; i++) {
+			num = this.getNumUnreadFeedItems(mDB, mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
+			numItems[i] = num + " item";
+			if(num != 1) {
+				numItems[i] = numItems[i] + "s";
+			}
+			Map<String, String> item = new HashMap<String, String>(2);
+			item.put("name", mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_NAME)));
+			item.put("numItems", numItems[i]);
+			feedList.add(item);
+			mCursor.moveToNext();
+		}
+		return feedList;
+	}
+	
+	public List<Map<String, String>> getFeedItemMap(final Context context, Cursor mCursor) {
+		List<Map<String, String>> feedItemsList = new ArrayList<Map<String, String>>();
+		mCursor.moveToFirst();
+		DateFormat inDateFormat = Utilities.getDateFormatter("yyyy-MM-dd HH:mm:ss");
+		DateFormat outDateFormat = Utilities.getDateFormatter(context);
+		Date date = null;
+		int count = mCursor.getCount();
+		for(int i = 0; i < count; i++) {
+			Map<String, String> item = new HashMap<String, String>(2);
+			item.put("title", mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_TITLE)));
+			try {
+				date = inDateFormat.parse(mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_PUB_DATE)));
+			}
+			catch(ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			item.put("pubDate", outDateFormat.format(date));
+			feedItemsList.add(item);
+			mCursor.moveToNext();
+		}
+		return feedItemsList;
 	}
 }

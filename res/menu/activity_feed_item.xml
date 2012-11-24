@@ -4,4 +4,5 @@
         android:id="@+id/menu_mark_as_read"
         android:title="@string/menu_mark_as_read">
     </item>
-</menu>
+
+</menu>

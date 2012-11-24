@@ -29,37 +29,47 @@
         <activity
             android:name=".SubscribeActivity"
             android:label="@string/title_activity_subscribe" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.MainActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.MainActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".FeedActivity"
             android:label="@string/title_activity_feed" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.MainActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".EditFeedActivity"
             android:label="@string/title_activity_edit_feed" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.FeedActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".FeedItemActivity"
             android:label="@string/title_activity_feed_item" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.FeedActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
     </application>
 

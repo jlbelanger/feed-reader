@@ -31,10 +31,14 @@
     
     <string name="settings_date_format">Date Format</string>
     <string name="settings_time_format">Time Format</string>
+    <string name="settings_update_interval">Update Interval</string>
+    
+    <string name="settings_summary_update_interval">How often the app checks for updates (in seconds).</string>
     
     <string name="message_no_network">You aren\'t connected to the internet, so this app is pretty useless.</string>
     <string name="message_invalid_rss">This is not a valid RSS file.</string>
     
-    <string name="default_time">H:mm</string>
-    <string name="default_date">yyyy/MM/dd</string>
+    <string name="default_time_format">H:mm</string>
+    <string name="default_date_format">yyyy/MM/dd</string>
+    <string name="default_update_interval">15</string>
 </resources>

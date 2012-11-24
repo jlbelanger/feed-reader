@@ -13,7 +13,7 @@ public final class FeedDatabase {
 		
 		public static final String	FEED_NAME						= "name";
 		public static final String	FEED_URL						= "url";
-
+		
 		public static final String	FEED_ITEM_FEED_ID				= "feedId";
 		public static final String	FEED_ITEM_TITLE					= "title";
 		public static final String	FEED_ITEM_PUB_DATE				= "pubDate";

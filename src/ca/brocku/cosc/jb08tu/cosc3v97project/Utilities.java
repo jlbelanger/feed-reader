@@ -1,28 +1,18 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
+import java.util.concurrent.ExecutionException;
 
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -30,67 +20,74 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat.Builder;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
 public class Utilities {
-	public static List<Map<String, String>> getFeedList(FeedDatabaseHelper mDatabase, SQLiteDatabase mDB, Cursor mCursor) {
-		List<Map<String, String>> feedList = new ArrayList<Map<String, String>>();
-		mCursor.moveToFirst();
-		int count = mCursor.getCount();
-		String[] numItems = new String[count];
-		int num = 0;
-		for(int i = 0; i < count; i++) {
-			num = mDatabase.getNumUnreadFeedItems(mDB, mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
-			numItems[i] = num + " item";
-			if(num != 1) {
-				numItems[i] = numItems[i] + "s";
-			}
-			Map<String, String> item = new HashMap<String, String>(2);
-			item.put("name", mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_NAME)));
-			item.put("numItems", numItems[i]);
-			feedList.add(item);
-			mCursor.moveToNext();
-		}
-		return feedList;
+	public static void sendNotification(Context context, String feedName) {
+		NotificationCompat.Builder builder = new Builder(context);
+		builder.setSmallIcon(R.drawable.ic_launcher);
+		builder.setContentTitle("FeedMe");
+		builder.setContentText("New feed item from " + feedName);
+		
+		Intent intent = new Intent(context, MainActivity.class);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+		builder.setContentIntent(pendingIntent);
+		builder.setAutoCancel(true);
+		
+		builder.setNumber(builder.build().number + 1);
+		builder.setContentInfo("" + builder.build().number);
+		
+		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+		notificationManager.notify(1, builder.build());
 	}
 	
-	public static int loadFeedItemsFromDatabase(final Activity activity, final FeedDatabaseHelper mDatabase, final SQLiteDatabase mDB, final Cursor mCursor, final Feed feed) {
+	public static String chop(String s) {
+		int end = s.length();
+		int max = 30;
+		if(end > max) {
+			end = max;
+		}
+		return s.substring(0, end);
+	}
+	
+	public static void setIntentOnMenuItem(Menu menu, int menuId, Intent intent) {
+		MenuItem menuItem = menu.findItem(menuId);
+		if(menuItem != null) {
+			menuItem.setIntent(intent);
+		}
+	}
+	
+	public static int loadFeedItemsFromDatabase(final Activity activity, final FeedDatabaseHelper mDatabase, final SQLiteDatabase mDB, Cursor mCursor, final Feed feed) {
 		int count = mCursor.getCount();
 		if(count > 0) {
-			// create feed item map for adapter
-			List<Map<String, String>> feedItemsList = new ArrayList<Map<String, String>>();
+			// get feed items
+			List<Map<String, String>> feedItemsList = mDatabase.getFeedItemMap(activity, mCursor);
+			
+			// get feed id list
+			final List<String> feedIds = new LinkedList<String>();
 			mCursor.moveToFirst();
-			SimpleDateFormat dateFormatter = Utilities.getDateFormatter(activity);
-			Date date = null;
 			for(int i = 0; i < count; i++) {
-				Map<String, String> item = new HashMap<String, String>(2);
-				item.put("name", mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_TITLE)));
-				DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd, HH:mm");
-				try {
-					date = dateFormat.parse(mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_PUB_DATE)));
-				}
-				catch(ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				item.put("date", dateFormatter.format(date));
-				feedItemsList.add(item);
+				feedIds.add(mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
 				mCursor.moveToNext();
 			}
 			
 			// add feed items to ListView
-			SimpleAdapter adapter = new SimpleAdapter(activity, feedItemsList, android.R.layout.simple_list_item_2, new String[] {"name", "date"}, new int[] {android.R.id.text1, android.R.id.text2});
+			SimpleAdapter adapter = new SimpleAdapter(activity, feedItemsList, android.R.layout.simple_list_item_2, new String[] {"title", "pubDate"}, new int[] {android.R.id.text1, android.R.id.text2});
 			final ListView lstFeedItems = (ListView)activity.findViewById(R.id.listViewFeedItems);
 			lstFeedItems.setAdapter(adapter);
 			
 			lstFeedItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 				@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-					mCursor.moveToPosition(position);
-					String currentFeedItemId = mCursor.getString(mCursor.getColumnIndex(Feeds._ID));
+					String currentFeedItemId = feedIds.get(position);
 					FeedItem currentFeedItem = mDatabase.getFeedItem(mDB, currentFeedItemId);
 					Bundle bundle = new Bundle();
 					bundle.putSerializable("feed", feed);
@@ -113,148 +110,38 @@ public class Utilities {
 		return false;
 	}
 	
-	public static boolean isValidURL(String sURL) {
+	public static boolean isValidURL(final String sURL) {
+		AsyncTask<String, Void, String> result = new MyNetworkHandler().execute("0", sURL);
+		String isValid = "";
 		try {
-			URL url = new URL(sURL);
-			HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-			httpURLConnection.setRequestMethod("HEAD");
-			httpURLConnection.connect();
-			
-			if(httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-				Map<String, List<String>> headerfields = httpURLConnection.getHeaderFields();
-				String contentType = headerfields.get("content-type").toString();
-				if(!contentType.contains("text/xml")) {
-					return false;
-				}
-				return true;
-			}
+			isValid = result.get();
 		}
-		catch(MalformedURLException e) {
+		catch(InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		catch(ProtocolException e) {
+		catch(ExecutionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		catch(IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(isValid.equals("true")) {
+			return true;
 		}
 		return false;
 	}
 	
-	public static String getFeedTitle(String sURL) {
-		try {
-			XmlPullParserFactory xmlPullParserFactory = XmlPullParserFactory.newInstance();
-			xmlPullParserFactory.setNamespaceAware(true);
-			XmlPullParser xmlPullParser = xmlPullParserFactory.newPullParser();
-			URL url = new URL(sURL);
-			InputStream inputStream = url.openStream();
-			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-			xmlPullParser.setInput(inputStreamReader);
-			int eventType = -1;
-			String tagName = "";
-			
-			while(eventType != XmlPullParser.END_DOCUMENT) {
-				if(eventType == XmlPullParser.START_TAG) {
-					tagName = xmlPullParser.getName();
-				}
-				else if(eventType == XmlPullParser.TEXT) {
-					if(tagName.equals("title")) {
-						return xmlPullParser.getText();
-					}
-				}
-				eventType = xmlPullParser.next();
-			}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-		return "";
-	}
-	
-	public static SimpleDateFormat getDateFormatter(Context context) {
+	public static DateFormat getDateFormatter(Context context) {
 		SharedPreferences preferences = context.getSharedPreferences("preferences", 0);
-		String dateFormat = preferences.getString("date_format", context.getString(R.string.default_date));
-		String timeFormat = preferences.getString("time_format", context.getString(R.string.default_time));
+		String dateFormat = preferences.getString("date_format", context.getString(R.string.default_date_format));
+		String timeFormat = preferences.getString("time_format", context.getString(R.string.default_time_format));
 		return new SimpleDateFormat(dateFormat + ", " + timeFormat);
 	}
 	
-	public static SimpleDateFormat getDefaultDateFormatter(Context context) {
-		String dateFormat = context.getString(R.string.default_date);
-		String timeFormat = context.getString(R.string.default_time);
-		return new SimpleDateFormat(dateFormat + ", " + timeFormat);
+	public static DateFormat getDateFormatter(String format) {
+		return new SimpleDateFormat(format);
 	}
 	
-	public static List<FeedItem> getNewFeedItems(FeedDatabaseHelper mDatabase, SQLiteDatabase mDB, Feed feed) {
-		List<FeedItem> feedItems = new LinkedList<FeedItem>();
-		try {
-			XmlPullParserFactory xmlPullParserFactory = XmlPullParserFactory.newInstance();
-			xmlPullParserFactory.setNamespaceAware(true);
-			XmlPullParser xmlPullParser = xmlPullParserFactory.newPullParser();
-			URL url = new URL(feed.getURL());
-			InputStream inputStream = url.openStream();
-			InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-			xmlPullParser.setInput(inputStreamReader);
-			
-			FeedItem currentItem = null;
-			int eventType = -1;
-			String tagName = "";
-			String title = "", pubDate = "", link = "", description = "", contentEncoded = "";
-			boolean start = false;
-			
-			while(eventType != XmlPullParser.END_DOCUMENT) {
-				if(eventType == XmlPullParser.START_TAG) {
-					tagName = xmlPullParser.getName();
-					if(tagName.equals("item")) {
-						start = true;
-					}
-				}
-				else if(start && eventType == XmlPullParser.TEXT) {
-					if(tagName.equals("title") && title.equals("")) {
-						title = xmlPullParser.getText();
-					}
-					else if(tagName.equals("pubDate") && pubDate.equals("")) {
-						pubDate = xmlPullParser.getText();
-					}
-					else if(tagName.equals("link") && link.equals("")) {
-						link = xmlPullParser.getText();
-					}
-					else if(tagName.equals("description") && description.equals("")) {
-						description = xmlPullParser.getText();
-					}
-					else if(tagName.equals("encoded") && contentEncoded.equals("")) {
-						contentEncoded = xmlPullParser.getText();
-					}
-				}
-				else if(start && eventType == XmlPullParser.END_TAG) {
-					tagName = xmlPullParser.getName();
-					if(tagName.equals("item")) {
-						if(mDatabase.doesFeedItemExist(mDB, feed.getId(), title, pubDate)) {
-							break;
-						}
-						currentItem = new FeedItem("", feed.getId(), title, pubDate, link, description, contentEncoded);
-						feedItems.add(currentItem);
-						title = "";
-						pubDate = "";
-						link = "";
-						description = "";
-						contentEncoded = "";
-					}
-				}
-				eventType = xmlPullParser.next();
-			}
-			
-			if(!title.equals("")) {
-				currentItem = new FeedItem("", feed.getId(), title, pubDate, link, description, contentEncoded);
-				feedItems.add(currentItem);
-			}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		return feedItems;
+	public static DateFormat getDateFormatter() {
+		return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	}
 }

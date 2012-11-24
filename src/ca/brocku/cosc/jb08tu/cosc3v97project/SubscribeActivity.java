@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -78,7 +77,7 @@ public class SubscribeActivity extends Activity {
 				}
 				
 				// get feed name
-				String name = Utilities.getFeedTitle(url);
+				String name = UtilitiesXML.getFeedTitle(url);
 				
 				// update database
 				mDatabase.addFeed(mDB, name, url);

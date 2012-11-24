@@ -19,31 +19,16 @@ public class FeedItem implements Serializable {
 	private String				contentEncoded;
 	private boolean				isRead;
 	
-	public FeedItem() {
-		this("", "", "", "", "", "", "");
-	}
-	
-	public FeedItem(String i, String f, String t, String p, String l, String d, String c) {
-		this(i, f, t, p, l, d, c, false);
-	}
-	
 	public FeedItem(String i, String f, String t, String p, String l, String d, String c, boolean iR) {
 		this.id = i;
 		this.feedId = f;
 		this.title = t;
-		DateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy kk:mm:ss zzz");
+		DateFormat inDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		try {
-			this.pubDate = dateFormat.parse(p);
+			this.pubDate = inDateFormat.parse(p);
 		}
 		catch(ParseException e) {
-			dateFormat = new SimpleDateFormat("yyyy/MM/dd, HH:mm");
-			try {
-				this.pubDate = dateFormat.parse(p);
-			}
-			catch(ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			e.printStackTrace();
 		}
 		this.link = l;
 		this.description = d;
@@ -63,15 +48,18 @@ public class FeedItem implements Serializable {
 		return this.title;
 	}
 	
-	public String getDate(Context context) {
-		SimpleDateFormat dateFormatter = Utilities.getDefaultDateFormatter(context);
-		return dateFormatter.format(this.pubDate);
+	public String getSortDate() {
+		if(!this.pubDate.equals("")) {
+			DateFormat outDateFormat = Utilities.getDateFormatter();
+			return outDateFormat.format(this.pubDate);
+		}
+		return "";
 	}
 	
 	public String getPrettyDate(Context context) {
 		if(!this.pubDate.equals("")) {
-			SimpleDateFormat dateFormatter = Utilities.getDateFormatter(context);
-			return dateFormatter.format(this.pubDate);
+			DateFormat outDateFormat = Utilities.getDateFormatter(context);
+			return outDateFormat.format(this.pubDate);
 		}
 		return "";
 	}

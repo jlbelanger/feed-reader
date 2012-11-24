@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <PreferenceCategory android:title="Settings" >
+    <PreferenceCategory android:title="Date/Time" >
         <ListPreference
             android:dialogTitle="@string/settings_date_format"
             android:entries="@array/date_formats"
@@ -14,6 +14,15 @@
             android:entryValues="@array/time_format_values"
             android:key="time_format"
             android:title="@string/settings_time_format" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Feeds" >
+        <EditTextPreference
+            android:name="@string/settings_update_interval"
+            android:defaultValue="@string/default_update_interval"
+            android:key="update_interval"
+            android:numeric="integer"
+            android:summary="@string/settings_summary_update_interval"
+            android:title="@string/settings_update_interval" />
     </PreferenceCategory>
 
 </PreferenceScreen>

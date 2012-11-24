@@ -3,19 +3,16 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.support.v4.app.NavUtils;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.text.method.ScrollingMovementMethod;
 
 public class FeedItemActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
-	protected Cursor				mCursor		= null;
 	protected SQLiteDatabase		mDB			= null;
 	private static String			feedId		= "";
 	private static String			feedItemId	= "";
@@ -55,13 +52,14 @@ public class FeedItemActivity extends Activity {
 		return true;
 	}
 	
-	@Override public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case android.R.id.home:
-			NavUtils.navigateUpFromSameTask(this);
-			return true;
+	@Override protected void onDestroy() {
+		super.onDestroy();
+		if(mDB != null) {
+			mDB.close();
 		}
-		return super.onOptionsItemSelected(item);
+		if(mDatabase != null) {
+			mDatabase.close();
+		}
 	}
 	
 	private void displayFeedItem() {
@@ -86,7 +84,7 @@ public class FeedItemActivity extends Activity {
 			// set TextView
 			txtTitle.setText(Html.fromHtml("<a href=\"" + feedItem.getLink() + "\">" + feedItem.getTitle() + "</a>"));
 			txtTitle.setMovementMethod(LinkMovementMethod.getInstance());
-			txtDate.setText(feedItem.getPrettyDate(this));
+			txtDate.setText(feedItem.getPrettyDate(this.getApplicationContext()));
 			txtContent.setText(Html.fromHtml(feedItem.getContent()));
 			txtContent.setMovementMethod(new ScrollingMovementMethod());
 		}

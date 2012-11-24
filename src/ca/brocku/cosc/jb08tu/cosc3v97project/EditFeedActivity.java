@@ -5,11 +5,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.support.v4.app.NavUtils;
 
 public class EditFeedActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -74,15 +72,6 @@ public class EditFeedActivity extends Activity {
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_edit_feed, menu);
 		return true;
-	}
-	
-	@Override public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case android.R.id.home:
-			NavUtils.navigateUpFromSameTask(this);
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
 	}
 	
 	@Override protected void onDestroy() {

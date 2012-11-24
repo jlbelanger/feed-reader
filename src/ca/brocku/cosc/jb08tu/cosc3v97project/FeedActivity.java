@@ -13,10 +13,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.support.v4.app.NavUtils;
 
 public class FeedActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -45,7 +43,7 @@ public class FeedActivity extends Activity {
 		Bundle bundle = this.getIntent().getExtras();
 		Intent intent = new Intent(this, EditFeedActivity.class);
 		intent.putExtras(bundle);
-		setIntentOnMenuItem(menu, R.id.menu_edit_feed, intent);
+		Utilities.setIntentOnMenuItem(menu, R.id.menu_edit_feed, intent);
 		
 		// delete feed
 		MenuItem menuItem = menu.findItem(R.id.menu_unsubscribe);
@@ -67,22 +65,6 @@ public class FeedActivity extends Activity {
 		});
 		
 		return true;
-	}
-	
-	private void setIntentOnMenuItem(Menu menu, int menuId, Intent intent) {
-		MenuItem menuItem = menu.findItem(menuId);
-		if(menuItem != null) {
-			menuItem.setIntent(intent);
-		}
-	}
-	
-	@Override public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case android.R.id.home:
-			NavUtils.navigateUpFromSameTask(this);
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
 	}
 	
 	@Override protected void onDestroy() {
@@ -122,20 +104,16 @@ public class FeedActivity extends Activity {
 			String columns[] = {Feeds._ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_PUB_DATE};
 			mCursor = queryBuilder.query(mDB, columns, Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?", new String[] {feed.getId(), "0"}, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
 			Utilities.loadFeedItemsFromDatabase(this, mDatabase, mDB, mCursor, feed);
+			mCursor.close();
 		}
 	}
 	
 	private void downloadNewFeedItems() {
-		// get feed items
-		final List<FeedItem> feedItems = Utilities.getNewFeedItems(mDatabase, mDB, feed);
+		// get new feed items
+		final List<FeedItem> feedItems = UtilitiesXML.getNewFeedItems(this, mDatabase, mDB, feed);
 		
 		// add new items to database
-		for(FeedItem feedItem : feedItems) {
-			if(!mDatabase.doesFeedItemExist(mDB, feedItem.getFeedId(), feedItem.getTitle(), feedItem.getDate(this))) {
-				mDatabase.addFeedItem(this, mDB, feedItem);
-				Log.i("feed", "add " + feedItem.getTitle() + " to database");
-			}
-		}
+		mDatabase.addNewFeedItemsToDatabase(feedItems, this.getApplicationContext(), mDB);
 	}
 	
 	private void returnToMain() {

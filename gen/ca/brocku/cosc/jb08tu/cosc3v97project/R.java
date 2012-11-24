@@ -76,8 +76,9 @@ public final class R {
         public static final int button_refresh=0x7f060010;
         public static final int button_subscribe=0x7f06000f;
         public static final int button_unsubscribe=0x7f06000e;
-        public static final int default_date=0x7f06001c;
-        public static final int default_time=0x7f06001b;
+        public static final int default_date_format=0x7f06001e;
+        public static final int default_time_format=0x7f06001d;
+        public static final int default_update_interval=0x7f06001f;
         public static final int editfeed_button=0x7f060016;
         public static final int editfeed_name=0x7f060014;
         public static final int editfeed_url=0x7f060015;
@@ -89,10 +90,12 @@ public final class R {
         public static final int menu_settings=0x7f060001;
         public static final int menu_subscribe=0x7f060002;
         public static final int menu_unsubscribe=0x7f060003;
-        public static final int message_invalid_rss=0x7f06001a;
-        public static final int message_no_network=0x7f060019;
+        public static final int message_invalid_rss=0x7f06001c;
+        public static final int message_no_network=0x7f06001b;
         public static final int settings_date_format=0x7f060017;
+        public static final int settings_summary_update_interval=0x7f06001a;
         public static final int settings_time_format=0x7f060018;
+        public static final int settings_update_interval=0x7f060019;
         public static final int title_activity_edit_feed=0x7f06000a;
         public static final int title_activity_feed=0x7f060009;
         public static final int title_activity_feed_item=0x7f06000b;

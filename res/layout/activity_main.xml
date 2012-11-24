@@ -27,7 +27,7 @@
             android:id="@+id/buttonRefresh"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="@string/refresh_button" />
+            android:text="@string/button_refresh" />
     </TableLayout>
 
 </RelativeLayout>

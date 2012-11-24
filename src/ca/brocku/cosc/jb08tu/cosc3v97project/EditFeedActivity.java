@@ -14,7 +14,7 @@ import android.support.v4.app.NavUtils;
 public class EditFeedActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
 	protected SQLiteDatabase		mDB			= null;
-	private static String			id			= "";
+	private static String			feedId		= "";
 	
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -30,8 +30,8 @@ public class EditFeedActivity extends Activity {
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {
 			// get feed id
-			id = bundle.getString("id");
-			Feed feed = mDatabase.getFeed(mDB, id);
+			feedId = bundle.getString("id");
+			Feed feed = mDatabase.getFeed(mDB, feedId);
 			
 			// update interface
 			setTitle("Edit " + feed.getName());
@@ -58,12 +58,12 @@ public class EditFeedActivity extends Activity {
 					String url = txtURL.getText().toString();
 					
 					// update database
-					mDatabase.editFeed(mDB, id, name, url);
+					mDatabase.editFeed(mDB, feedId, name, url);
 					
 					// return to feed activity
 					Intent intent = new Intent(v.getContext(), FeedActivity.class);
 					Bundle bundle = new Bundle();
-					bundle.putLong("id", Long.parseLong(id));
+					bundle.putString("id", feedId);
 					intent.putExtras(bundle);
 					startActivityForResult(intent, 0);
 				}

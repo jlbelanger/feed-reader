@@ -2,6 +2,9 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -11,21 +14,66 @@ import android.text.method.LinkMovementMethod;
 import android.text.method.ScrollingMovementMethod;
 
 public class FeedItemActivity extends Activity {
+	protected FeedDatabaseHelper	mDatabase	= null;
+	protected Cursor				mCursor		= null;
+	protected SQLiteDatabase		mDB			= null;
+	private static String			feedId		= "";
+	private static String			feedItemId	= "";
+	
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_feed_item);
+		
+		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
+		mDB = mDatabase.getWritableDatabase();
 	}
 	
 	@Override public void onStart() {
 		super.onStart();
+		displayFeedItem();
+	}
+	
+	@Override public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_feed_item, menu);
 		
+		// mark as read
+		MenuItem menuItem = menu.findItem(R.id.menu_mark_as_read);
+		menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+			@Override public boolean onMenuItemClick(MenuItem item) {
+				mDatabase.markFeedItemAsRead(mDB, feedItemId);
+				
+				Bundle bundle = new Bundle();
+				bundle.putString("id", feedId);
+				Intent intent = new Intent(FeedItemActivity.this, FeedActivity.class);
+				intent.putExtras(bundle);
+				startActivityForResult(intent, 0);
+				
+				return true;
+			}
+		});
+		
+		return true;
+	}
+	
+	@Override public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()) {
+		case android.R.id.home:
+			NavUtils.navigateUpFromSameTask(this);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
+	private void displayFeedItem() {
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {
 			// get feed
 			Feed feed = (Feed)bundle.getSerializable("feed");
+			feedId = feed.getId();
 			
 			// get feed item
 			FeedItem feedItem = (FeedItem)bundle.getSerializable("feedItem");
+			feedItemId = feedItem.getId();
 			
 			// update interface
 			setTitle(feed.getName());
@@ -42,20 +90,5 @@ public class FeedItemActivity extends Activity {
 			txtContent.setText(Html.fromHtml(feedItem.getContent()));
 			txtContent.setMovementMethod(new ScrollingMovementMethod());
 		}
-		
-	}
-	
-	@Override public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_feed_item, menu);
-		return true;
-	}
-	
-	@Override public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case android.R.id.home:
-			NavUtils.navigateUpFromSameTask(this);
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
 	}
 }

@@ -16,7 +16,6 @@ import android.support.v4.app.NavUtils;
 
 public class SubscribeActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
-	protected Cursor				mCursor		= null;
 	protected SQLiteDatabase		mDB			= null;
 	
 	@Override public void onCreate(Bundle savedInstanceState) {
@@ -29,38 +28,7 @@ public class SubscribeActivity extends Activity {
 	
 	@Override public void onStart() {
 		super.onStart();
-		
-		final Button btnSubscribe = (Button)findViewById(R.id.buttonSubscribe);
-		btnSubscribe.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				// get EditText
-				final EditText txtURL = (EditText)findViewById(R.id.editTextURL);
-				
-				// get EditText value
-				String url = txtURL.getText().toString().trim();
-				if(!url.startsWith("http")) {
-					url = "http://" + url;
-				}
-				
-				if(!Utilities.isValidURL(url)) {
-					Builder dialog = new AlertDialog.Builder(SubscribeActivity.this);
-					dialog.setMessage("This is not a valid RSS file.");
-					dialog.setPositiveButton("OK", null);
-					dialog.show();
-					return;
-				}
-				
-				// get feed name
-				String name = Utilities.getFeedTitle(url);
-				
-				// update database
-				mDatabase.addFeed(mDB, name, url);
-				
-				// return to main activity
-				Intent intent = new Intent(v.getContext(), MainActivity.class);
-				startActivityForResult(intent, 0);
-			}
-		});
+		displaySubscribe();
 	}
 	
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -85,5 +53,40 @@ public class SubscribeActivity extends Activity {
 		if(mDatabase != null) {
 			mDatabase.close();
 		}
+	}
+	
+	private void displaySubscribe() {
+		final Button btnSubscribe = (Button)findViewById(R.id.buttonSubscribe);
+		btnSubscribe.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				// get EditText
+				final EditText txtURL = (EditText)findViewById(R.id.editTextURL);
+				
+				// get EditText value
+				String url = txtURL.getText().toString().trim();
+				if(!url.startsWith("http")) {
+					url = "http://" + url;
+				}
+				
+				// check for valid URL
+				if(!Utilities.isValidURL(url)) {
+					Builder dialog = new AlertDialog.Builder(SubscribeActivity.this);
+					dialog.setMessage(R.string.message_invalid_rss);
+					dialog.setPositiveButton(R.string.button_ok, null);
+					dialog.show();
+					return;
+				}
+				
+				// get feed name
+				String name = Utilities.getFeedTitle(url);
+				
+				// update database
+				mDatabase.addFeed(mDB, name, url);
+				
+				// return to main activity
+				Intent intent = new Intent(SubscribeActivity.this, MainActivity.class);
+				startActivityForResult(intent, 0);
+			}
+		});
 	}
 }

@@ -14,6 +14,9 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+        <service android:name="FeedService" >
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main" >
@@ -28,21 +31,21 @@
             android:label="@string/title_activity_subscribe" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.FeedActivity" />
+                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.MainActivity" />
         </activity>
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.FeedActivity" />
+                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.MainActivity" />
         </activity>
         <activity
             android:name=".FeedActivity"
             android:label="@string/title_activity_feed" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.FeedActivity" />
+                android:value="ca.brocku.cosc.jb08tu.cosc3v97project.MainActivity" />
         </activity>
         <activity
             android:name=".EditFeedActivity"

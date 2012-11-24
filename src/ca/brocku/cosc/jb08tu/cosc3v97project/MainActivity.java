@@ -1,7 +1,5 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,8 +18,12 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.TableLayout;
 import android.widget.TextView;
+
+// TODO 
+// maybe add a setting, delete feed items older than X days
+// displaying images in FeedItemActivity
+// back stack
 
 public class MainActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -35,32 +37,12 @@ public class MainActivity extends Activity {
 		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
 		mDB = mDatabase.getReadableDatabase();
 		
-		//mDB.execSQL("DELETE FROM " + Feeds.FEED_ITEMS_TABLE_NAME + ";");
+		// mDB.execSQL("DELETE FROM " + Feeds.FEED_ITEMS_TABLE_NAME + ";");
 	}
 	
 	@Override public void onStart() {
 		super.onStart();
-		checkForNetworkConnection();
-	}
-	
-	private void checkForNetworkConnection() {
-		final TextView txtNoNetwork = (TextView)findViewById(R.id.textViewNetworkConnection);
-		final Button btnRefresh = (Button)findViewById(R.id.buttonRefresh);
-		
-		if(Utilities.hasNetworkConnection(this)) {
-			txtNoNetwork.setVisibility(View.INVISIBLE);
-			btnRefresh.setVisibility(View.INVISIBLE);
-			loadFeedsFromDatabase();
-		}
-		else {
-			txtNoNetwork.setVisibility(View.VISIBLE);
-			btnRefresh.setVisibility(View.VISIBLE);
-			btnRefresh.setOnClickListener(new View.OnClickListener() {
-				@Override public void onClick(View v) {
-					checkForNetworkConnection();
-				}
-			});
-		}
+		displayFeeds();
 	}
 	
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -79,6 +61,9 @@ public class MainActivity extends Activity {
 	
 	@Override protected void onDestroy() {
 		super.onDestroy();
+		if(mCursor != null) {
+			mCursor.close();
+		}
 		if(mDB != null) {
 			mDB.close();
 		}
@@ -87,36 +72,40 @@ public class MainActivity extends Activity {
 		}
 	}
 	
+	private void displayFeeds() {
+		final TextView txtNoNetwork = (TextView)findViewById(R.id.textViewNetworkConnection);
+		final Button btnRefresh = (Button)findViewById(R.id.buttonRefresh);
+		
+		if(Utilities.hasNetworkConnection(this)) {
+			txtNoNetwork.setVisibility(View.INVISIBLE);
+			btnRefresh.setVisibility(View.INVISIBLE);
+			
+			loadFeedsFromDatabase();
+		}
+		else {
+			txtNoNetwork.setVisibility(View.VISIBLE);
+			btnRefresh.setVisibility(View.VISIBLE);
+			btnRefresh.setOnClickListener(new View.OnClickListener() {
+				@Override public void onClick(View v) {
+					displayFeeds();
+				}
+			});
+		}
+	}
+	
 	private void loadFeedsFromDatabase() {
+		// query database
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		queryBuilder.setTables(Feeds.FEEDS_TABLE_NAME);
-		
 		String columns[] = {Feeds._ID, Feeds.FEED_NAME};
 		mCursor = queryBuilder.query(mDB, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
-		startManagingCursor(mCursor);
 		
 		if(mCursor.getCount() > 0) {
-			// create feed item map for adapter
-			List<Map<String, String>> feedList = new ArrayList<Map<String, String>>();
-			mCursor.moveToFirst();
-			int count = mCursor.getCount();
-			String[] numItems = new String[count];
-			int num = 0;
-			for(int i = 0; i < count; i++) {
-				num = mDatabase.getNumUnreadFeedItems(mDB, mCursor.getString(0));
-				numItems[i] = num + " item";
-				if(num != 1) {
-					numItems[i] = numItems[i] + "s";
-				}
-				Map<String, String> item = new HashMap<String, String>(2);
-				item.put("title", mCursor.getString(1));
-				item.put("numItems", numItems[i]);
-				feedList.add(item);
-				mCursor.moveToNext();
-			}
+			// get feed items
+			List<Map<String, String>> feedList = Utilities.getFeedList(mDatabase, mDB, mCursor);
 			
 			// add feed items to ListView
-			SimpleAdapter adapter = new SimpleAdapter(this, feedList, android.R.layout.simple_list_item_2, new String[] {"title", "numItems"}, new int[] {android.R.id.text1, android.R.id.text2});
+			SimpleAdapter adapter = new SimpleAdapter(this, feedList, android.R.layout.simple_list_item_2, new String[] {"name", "numItems"}, new int[] {android.R.id.text1, android.R.id.text2});
 			final ListView lstFeeds = (ListView)findViewById(R.id.listViewFeeds);
 			lstFeeds.setAdapter(adapter);
 			
@@ -124,7 +113,7 @@ public class MainActivity extends Activity {
 				@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					Bundle bundle = new Bundle();
 					mCursor.moveToPosition(position);
-					bundle.putString("id", mCursor.getString(0));
+					bundle.putString("id",  mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
 					Intent intent = new Intent(parent.getContext(), FeedActivity.class);
 					intent.putExtras(bundle);
 					startActivityForResult(intent, 0);
@@ -132,11 +121,8 @@ public class MainActivity extends Activity {
 			});
 		}
 		else {
-			Button btnSubscribe = new Button(this);
+			final Button btnSubscribe = (Button)findViewById(R.id.buttonRefresh);
 			btnSubscribe.setText(R.string.menu_subscribe);
-			TableLayout layout = (TableLayout)findViewById(R.id.layoutMain);
-			layout.addView(btnSubscribe);
-			
 			btnSubscribe.setOnClickListener(new View.OnClickListener() {
 				@Override public void onClick(View v) {
 					Intent intent = new Intent(v.getContext(), SubscribeActivity.class);

@@ -114,6 +114,20 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	public void markFeedItemAsRead(SQLiteDatabase mDB, String id) {
+		mDB.beginTransaction();
+		try {
+			ContentValues contentValues = new ContentValues();
+			contentValues.put(Feeds.FEED_ITEM_IS_READ, "1");
+			
+			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues, Feeds._ID + "=?", new String[] {id});
+			mDB.setTransactionSuccessful();
+		}
+		finally {
+			mDB.endTransaction();
+		}
+	}
+	
 	public Feed getFeed(SQLiteDatabase mDB, String id) {
 		String columns[] = {Feeds.FEED_NAME, Feeds.FEED_URL};
 		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, Feeds._ID + "=?", new String[] {id}, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);

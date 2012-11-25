@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
@@ -54,11 +55,22 @@ public class FeedActivity extends Activity {
 				dialog.setPositiveButton(R.string.button_unsubscribe, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
 						mDatabase.deleteFeed(mDB, "" + feedId);
-						Intent intent = new Intent(FeedActivity.this, MainActivity.class);
-						startActivityForResult(intent, 0);
+						finish();
 					}
 				});
 				dialog.show();
+				return true;
+			}
+		});
+		
+		// mark all as read
+		MenuItem menuItemRead = menu.findItem(R.id.menu_mark_all_as_read);
+		menuItemRead.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+			@Override public boolean onMenuItemClick(MenuItem item) {
+				mDatabase.markAllFeedsItemsAsRead(mDB, "" + feedId);
+				Intent intent = new Intent(FeedActivity.this, MainActivity.class);
+				startActivityForResult(intent, 0);
+				finish();
 				return true;
 			}
 		});
@@ -82,25 +94,15 @@ public class FeedActivity extends Activity {
 	private void displayFeedItems() {
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {
-			// get feed
-			feedId = bundle.getString("id");
-			// String numItems = bundle.getString("numItems");
+			feedId = bundle.getString(Feeds._ID);
 			feed = mDatabase.getFeed(mDB, feedId);
-			
-			// update interface
-			// if(numItems != null) {
-			// setTitle(feed.getName());
-			// }
-			// else {
-			// setTitle(feed.getName() + " (" + numItems + ")");
-			// }
 			
 			// check for network connection
 			if(Utilities.hasNetworkConnection(this.getApplicationContext())) {
 				Utilities.downloadNewFeedItems(this.getApplicationContext(), mDatabase, mDB, feed);
 			}
 			else {
-				returnToMain();
+				Utilities.returnToMain(this);
 			}
 			
 			// load all feed items
@@ -108,29 +110,12 @@ public class FeedActivity extends Activity {
 			queryBuilder.setTables(Feeds.FEED_ITEMS_TABLE_NAME);
 			String columns[] = {Feeds._ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_PUB_DATE};
 			mCursor = queryBuilder.query(mDB, columns, Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?", new String[] {feed.getId(), "0"}, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
-			Utilities.loadFeedItemsFromDatabase(this, mDatabase, mDB, mCursor, feed);
+			Utilities.loadFeedItemsFromDatabase(this, mDatabase, mDB, mCursor, R.id.listViewFeedItems, feed);
 			mCursor.close();
 			
 			final ListView lstFeedItems = (ListView)findViewById(R.id.listViewFeedItems);
 			int count = lstFeedItems.getCount();
-			String numItems = "" + count;
-			numItems += " item";
-			if(count != 1) {
-				numItems += "s";
-			}
-			setTitle(feed.getName() + " (" + numItems + ")");
+			setTitle(feed.getName() + " (" + Utilities.getNumItems(count) + ")");
 		}
-	}
-	
-	private void returnToMain() {
-		Builder dialog = new AlertDialog.Builder(FeedActivity.this);
-		dialog.setMessage(R.string.message_no_network);
-		dialog.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int id) {
-				Intent intent = new Intent(FeedActivity.this, MainActivity.class);
-				startActivityForResult(intent, 0);
-			}
-		});
-		dialog.show();
 	}
 }

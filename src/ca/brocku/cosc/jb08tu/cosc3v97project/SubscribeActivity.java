@@ -57,7 +57,8 @@ public class SubscribeActivity extends Activity {
 				}
 				
 				// check for valid URL
-				if(!Utilities.isValidURL(url) || url.equals("")) {
+				url = Utilities.getValidURL(url);
+				if(url.equals("")) {
 					Builder dialog = new AlertDialog.Builder(SubscribeActivity.this);
 					dialog.setMessage(R.string.message_invalid_rss);
 					dialog.setPositiveButton(R.string.button_ok, null);
@@ -78,6 +79,7 @@ public class SubscribeActivity extends Activity {
 				// return to main activity
 				Intent intent = new Intent(SubscribeActivity.this, MainActivity.class);
 				startActivityForResult(intent, 0);
+				finish();
 			}
 		});
 	}

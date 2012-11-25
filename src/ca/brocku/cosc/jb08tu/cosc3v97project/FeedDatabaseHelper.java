@@ -62,7 +62,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 	public void addFeedItem(Context context, SQLiteDatabase mDB, FeedItem feedItem) {
 		mDB.beginTransaction();
 		try {
-			Log.i("feeddd", "---add feed item with date " + feedItem.getSortDate());
+			Log.i("feed", "---add feed item " + Utilities.chop(feedItem.getTitle()));
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_ITEM_FEED_ID, feedItem.getFeedId());
 			contentValues.put(Feeds.FEED_ITEM_TITLE, feedItem.getTitle());
@@ -122,6 +122,19 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_ITEM_IS_READ, "1");
 			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues, Feeds._ID + "=?", new String[] {feedItemId});
+			mDB.setTransactionSuccessful();
+		}
+		finally {
+			mDB.endTransaction();
+		}
+	}
+	
+	public void markAllFeedsItemsAsRead(SQLiteDatabase mDB, String feedId) {
+		mDB.beginTransaction();
+		try {
+			ContentValues contentValues = new ContentValues();
+			contentValues.put(Feeds.FEED_ITEM_IS_READ, "1");
+			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues, Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?", new String[] {feedId, "0"});
 			mDB.setTransactionSuccessful();
 		}
 		finally {
@@ -206,7 +219,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 				numItems[i] = numItems[i] + "s";
 			}
 			Map<String, String> item = new HashMap<String, String>(2);
-			item.put("name", mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_NAME)));
+			item.put(Feeds.FEED_NAME, mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_NAME)));
 			item.put("numItems", numItems[i]);
 			feedList.add(item);
 			mCursor.moveToNext();
@@ -214,24 +227,39 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedList;
 	}
 	
-	public List<Map<String, String>> getFeedItemMap(final Context context, Cursor mCursor) {
+	public List<Map<String, String>> getFeedItemMap(final Context context, SQLiteDatabase mDB, Cursor mCursor, String subtext) {
 		List<Map<String, String>> feedItemsList = new ArrayList<Map<String, String>>();
 		mCursor.moveToFirst();
 		DateFormat inDateFormat = Utilities.getDateFormatter("yyyy-MM-dd HH:mm:ss");
 		DateFormat outDateFormat = Utilities.getDateFormatter(context);
 		Date date = null;
 		int count = mCursor.getCount();
+		Feed feed;
 		for(int i = 0; i < count; i++) {
 			Map<String, String> item = new HashMap<String, String>(2);
-			item.put("title", mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_TITLE)));
-			try {
-				date = inDateFormat.parse(mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_PUB_DATE)));
+			item.put(Feeds.FEED_ITEM_TITLE, mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_TITLE)));
+			if(subtext.equals(Feeds.FEED_ITEM_PUB_DATE)) {
+				try {
+					date = inDateFormat.parse(mCursor.getString(mCursor.getColumnIndex(subtext)));
+				}
+				catch(ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				item.put(subtext, outDateFormat.format(date));
 			}
-			catch(ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			else if(subtext.equals(Feeds.FEED_ITEM_FEED_ID)) {
+				feed = this.getFeed(mDB, mCursor.getString(mCursor.getColumnIndex(subtext)));
+				if(feed != null) {
+					item.put(subtext, feed.getName());
+				}
+				else {
+					item.put(subtext, "");
+				}
 			}
-			item.put("pubDate", outDateFormat.format(date));
+			else {
+				item.put(subtext, mCursor.getString(mCursor.getColumnIndex(subtext)));
+			}
 			feedItemsList.add(item);
 			mCursor.moveToNext();
 		}

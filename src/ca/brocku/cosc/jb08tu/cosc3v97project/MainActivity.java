@@ -27,16 +27,16 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 // TODO 
-// back stack
 // gestures
+// full view option for FeedActivity
+
+// bug: subscribe hangs, mark as read hangs
+//move network, database stuff off UI thread
 
 // update number of items when a new feed item is found
 // maybe add a setting, delete feed items older than X days
 // nicer icon
-// if URL is invalid XML, but it is valid HTML, search for <link> with XML
-// move network, database stuff off UI thread
 // landscape mode
-// all items view
 
 public class MainActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -46,12 +46,12 @@ public class MainActivity extends Activity {
 	
 	private Handler					handler		= new Handler() {
 													public void handleMessage(Message message) {
-														Object feedName = message.obj;
-														if(message.arg1 == RESULT_OK && feedName != null) {
+														Feed feed = (Feed)message.obj;
+														if(message.arg1 == RESULT_OK && feed.getName() != null) {
 															SharedPreferences preferences = getApplicationContext().getSharedPreferences("preferences", 0);
 															boolean enableNotifications = preferences.getBoolean("enable_notifications", true);
 															if(enableNotifications) {
-																Utilities.sendNotification(getApplicationContext(), feedName.toString());
+																Utilities.sendNotification(getApplicationContext(), feed.getName());
 															}
 															adapter.notifyDataSetChanged(); // TODO don't know if this works
 														}
@@ -64,7 +64,7 @@ public class MainActivity extends Activity {
 		
 		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
 		mDB = mDatabase.getReadableDatabase();
-		
+
 		// mDB.execSQL("DELETE FROM " + Feeds.FEED_ITEMS_TABLE_NAME + ";");
 		
 		runService();
@@ -79,6 +79,7 @@ public class MainActivity extends Activity {
 		getMenuInflater().inflate(R.menu.activity_main, menu);
 		Utilities.setIntentOnMenuItem(menu, R.id.menu_subscribe, new Intent(this, SubscribeActivity.class));
 		Utilities.setIntentOnMenuItem(menu, R.id.menu_settings, new Intent(this, SettingsActivity.class));
+		Utilities.setIntentOnMenuItem(menu, R.id.menu_aggregated_view, new Intent(this, AggregatedActivity.class));
 		return true;
 	}
 	
@@ -161,7 +162,7 @@ public class MainActivity extends Activity {
 			final List<Map<String, String>> feedList = mDatabase.getFeedMap(mDB, mCursor);
 			
 			// add feed to ListView
-			adapter = new SimpleAdapter(this, feedList, android.R.layout.simple_list_item_2, new String[] {"name", "numItems"}, new int[] {android.R.id.text1, android.R.id.text2});
+			adapter = new SimpleAdapter(this, feedList, android.R.layout.simple_list_item_2, new String[] {Feeds.FEED_NAME, "numItems"}, new int[] {android.R.id.text1, android.R.id.text2});
 			final ListView lstFeeds = (ListView)findViewById(R.id.listViewFeeds);
 			lstFeeds.setAdapter(adapter);
 			
@@ -169,7 +170,7 @@ public class MainActivity extends Activity {
 				@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					Bundle bundle = new Bundle();
 					mCursor.moveToPosition(position);
-					bundle.putString("id", mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
+					bundle.putString(Feeds._ID, mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
 					bundle.putString("numItems", feedList.get(position).values().toArray()[0].toString());
 					Intent intent = new Intent(parent.getContext(), FeedActivity.class);
 					intent.putExtras(bundle);

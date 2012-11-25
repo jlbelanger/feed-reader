@@ -34,17 +34,17 @@ public class FeedService extends IntentService {
 			List<FeedItem> feedItems;
 			int i = 0;
 			while(true) {
+				Log.i("feed", i + ": checking feeds...");
 				for(Feed feed : feeds) {
-					Log.i("feed", i + ": checking feed " + feed.getName());
 					feedItems = UtilitiesXML.getNewFeedItems(this, mDatabase, mDB, feed);
 					if(feedItems.size() > 0) {
 						mDatabase.addNewFeedItemsToDatabase(feedItems, getApplicationContext(), mDB);
 						result = Activity.RESULT_OK;
-						Message msg = Message.obtain();
-						msg.arg1 = result;
-						msg.obj = feed.getName();
+						Message message = Message.obtain();
+						message.arg1 = result;
+						message.obj = feed;
 						try {
-							messenger.send(msg);
+							messenger.send(message);
 						}
 						catch(android.os.RemoteException e) {}
 					}

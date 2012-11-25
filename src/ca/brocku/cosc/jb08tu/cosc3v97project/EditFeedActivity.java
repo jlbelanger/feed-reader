@@ -1,5 +1,6 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -28,7 +29,7 @@ public class EditFeedActivity extends Activity {
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {
 			// get feed id
-			feedId = bundle.getString("id");
+			feedId = bundle.getString(Feeds._ID);
 			Feed feed = mDatabase.getFeed(mDB, feedId);
 			
 			// update interface
@@ -59,11 +60,7 @@ public class EditFeedActivity extends Activity {
 					mDatabase.editFeed(mDB, feedId, name, url);
 					
 					// return to feed activity
-					Intent intent = new Intent(v.getContext(), FeedActivity.class);
-					Bundle bundle = new Bundle();
-					bundle.putString("id", feedId);
-					intent.putExtras(bundle);
-					startActivityForResult(intent, 0);
+					finish();
 				}
 			});
 		}

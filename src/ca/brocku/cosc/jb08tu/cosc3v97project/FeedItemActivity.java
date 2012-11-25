@@ -3,9 +3,12 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
+import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.view.Menu;
@@ -43,13 +46,7 @@ public class FeedItemActivity extends Activity {
 		menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
 			@Override public boolean onMenuItemClick(MenuItem item) {
 				mDatabase.markFeedItemAsRead(mDB, feedItemId);
-				
-				Bundle bundle = new Bundle();
-				bundle.putString("id", feedId);
-				Intent intent = new Intent(FeedItemActivity.this, FeedActivity.class);
-				intent.putExtras(bundle);
-				startActivityForResult(intent, 0);
-				
+				finish();
 				return true;
 			}
 		});
@@ -98,6 +95,12 @@ public class FeedItemActivity extends Activity {
 			catch(UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+			
+			SharedPreferences preferences = getApplicationContext().getSharedPreferences("preferences", 0);
+			boolean autoMarkAsRead = preferences.getBoolean("auto_mark_as_read", false);
+			if(autoMarkAsRead) {
+				mDatabase.markFeedItemAsRead(mDB, feedItemId);
 			}
 		}
 	}

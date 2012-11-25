@@ -15,7 +15,7 @@
             android:key="time_format"
             android:title="@string/settings_time_format" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="Feeds" >
+    <PreferenceCategory android:title="Miscellaneous" >
         <EditTextPreference
             android:name="@string/settings_update_interval"
             android:defaultValue="@string/default_update_interval"
@@ -23,11 +23,16 @@
             android:numeric="integer"
             android:summary="@string/settings_summary_update_interval"
             android:title="@string/settings_update_interval" />
-
-        <CheckBoxPreference
+        <CheckBoxPreference
             android:defaultValue="true"
             android:key="enable_notifications"
+            android:summary="@string/settings_summary_enable_notifications"
             android:title="@string/settings_enable_notifications" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="auto_mark_as_read"
+            android:summary="@string/settings_summary_auto_mark_as_read"
+            android:title="@string/settings_auto_mark_as_read" />
     </PreferenceCategory>
 
 </PreferenceScreen>

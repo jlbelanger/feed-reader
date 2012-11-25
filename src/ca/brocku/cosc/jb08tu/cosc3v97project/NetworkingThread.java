@@ -1,5 +1,6 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,16 +10,20 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 public class NetworkingThread extends AsyncTask<String, Void, String> {
 	@Override protected String doInBackground(String... arg) {
 		if(arg[0].equals("0")) {
-			return isValidURL(arg[1]);
+			return getValidURL(arg[1]);
 		}
 		else if(arg[0].equals("1")) {
 			return getFeedTitle(arg[1]);
@@ -26,7 +31,36 @@ public class NetworkingThread extends AsyncTask<String, Void, String> {
 		return "";
 	}
 	
-	private static String isValidURL(String sURL) {
+	private static String getFeedURLFromHTML(String sURL) {
+		String line;
+		Pattern pattern;
+		Matcher matcher;
+		try {
+			URL url = new URL(sURL);
+			InputStream inputStream = url.openStream();
+			DataInputStream dataInputStream = new DataInputStream(inputStream);
+			while((line = dataInputStream.readLine()) != null) {
+				if(line.contains("type=\"application/rss+xml\"")) {
+					pattern = Pattern.compile("<link.*href=\"(.+)\".*/?>");
+					matcher = pattern.matcher(line);
+					if(matcher.find()) {
+						return matcher.group(1);
+					}
+				}
+			}
+		}
+		catch(MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
+	private static String getValidURL(String sURL) {
 		try {
 			URL url = new URL(sURL);
 			HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
@@ -35,10 +69,16 @@ public class NetworkingThread extends AsyncTask<String, Void, String> {
 			if(httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
 				Map<String, List<String>> headerfields = httpURLConnection.getHeaderFields();
 				String contentType = headerfields.get("content-type").toString();
-				if(!contentType.contains("text/xml")) {
-					return "false";
+				if(contentType.contains("text/xml")) {
+					return sURL;
 				}
-				return "true";
+				else {
+					String alternateURL = getFeedURLFromHTML(sURL);
+					if(!alternateURL.equals("")) {
+						return alternateURL;
+					}
+					return "";
+				}
 			}
 		}
 		catch(MalformedURLException e) {
@@ -53,7 +93,7 @@ public class NetworkingThread extends AsyncTask<String, Void, String> {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return "false";
+		return "";
 	}
 	
 	private static String getFeedTitle(String sURL) {

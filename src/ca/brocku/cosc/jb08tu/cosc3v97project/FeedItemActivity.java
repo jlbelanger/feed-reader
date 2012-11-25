@@ -1,11 +1,16 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.WebView;
 import android.widget.TextView;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
@@ -79,14 +84,21 @@ public class FeedItemActivity extends Activity {
 			// get TextView
 			final TextView txtTitle = (TextView)findViewById(R.id.textViewTitle);
 			final TextView txtDate = (TextView)findViewById(R.id.textViewDate);
-			final TextView txtContent = (TextView)findViewById(R.id.textViewContent);
+			final WebView txtContent = (WebView)findViewById(R.id.textViewContent);
 			
 			// set TextView
 			txtTitle.setText(Html.fromHtml("<a href=\"" + feedItem.getLink() + "\">" + feedItem.getTitle() + "</a>"));
 			txtTitle.setMovementMethod(LinkMovementMethod.getInstance());
 			txtDate.setText(feedItem.getPrettyDate(this.getApplicationContext()));
-			txtContent.setText(Html.fromHtml(feedItem.getContent()));
-			txtContent.setMovementMethod(new ScrollingMovementMethod());
+			String content = feedItem.getContent();
+			try {
+				// bug fix from http://code.google.com/p/android-rss/issues/detail?id=15
+				txtContent.loadData(URLEncoder.encode(content, "utf-8").replaceAll("\\+", " "), "text/html", "utf-8");
+			}
+			catch(UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 }

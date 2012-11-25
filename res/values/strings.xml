@@ -23,15 +23,16 @@
     <string name="button_refresh">Refresh</string>
     <string name="button_ok">OK</string>
     <string name="button_cancel">Cancel</string>
+    <string name="button_edit_feed">Edit Feed</string>
     
-    <string name="label_subscribe">Enter a feed address:</string>
-    <string name="editfeed_name">Name</string>
-    <string name="editfeed_url">URL</string>
-    <string name="editfeed_button">Edit Feed</string>
+    <string name="label_subscribe">Enter a feed address</string>
+    <string name="label_name">Feed name</string>
+    <string name="label_url">Feed address</string>
     
     <string name="settings_date_format">Date Format</string>
     <string name="settings_time_format">Time Format</string>
     <string name="settings_update_interval">Update Interval</string>
+    <string name="settings_enable_notifications">Enable Notifications</string>
     
     <string name="settings_summary_update_interval">How often the app checks for updates (in seconds).</string>
     

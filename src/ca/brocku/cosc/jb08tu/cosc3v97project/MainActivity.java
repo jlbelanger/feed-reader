@@ -18,7 +18,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
@@ -26,27 +25,35 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 // TODO 
-// displaying images in FeedItemActivity
 // back stack
 // gestures
+
 // update number of items when a new feed item is found
-// on unsubscribe, delete all feed items?
 // maybe add a setting, delete feed items older than X days
-// nice icon
+// nicer icon
+// if URL is invalid XML, but it is valid HTML, search for <link> with XML
+// move network, database stuff off UI thread
+// landscape mode
+// all items view
 
 public class MainActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
 	protected Cursor				mCursor		= null;
 	protected SQLiteDatabase		mDB			= null;
+	private SimpleAdapter			adapter		= null;
 	
 	private Handler					handler		= new Handler() {
 													public void handleMessage(Message message) {
 														Object feedName = message.obj;
 														if(message.arg1 == RESULT_OK && feedName != null) {
-															Utilities.sendNotification(getApplicationContext(), feedName.toString());
+															SharedPreferences preferences = getApplicationContext().getSharedPreferences("preferences", 0);
+															boolean enableNotifications = preferences.getBoolean("enable_notifications", true);
+															if(enableNotifications) {
+																Utilities.sendNotification(getApplicationContext(), feedName.toString());
+															}
+															adapter.notifyDataSetChanged(); // TODO don't know if this works
 														}
 													};
 												};
@@ -143,17 +150,18 @@ public class MainActivity extends Activity {
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		queryBuilder.setTables(Feeds.FEEDS_TABLE_NAME);
 		String columns[] = {Feeds._ID, Feeds.FEED_NAME};
+		mCursor.close();
 		mCursor = queryBuilder.query(mDB, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
-
+		
 		final Button btnSubscribe = (Button)findViewById(R.id.buttonRefresh);
 		if(mCursor.getCount() > 0) {
 			btnSubscribe.setVisibility(View.INVISIBLE);
 			
 			// get feeds
-			List<Map<String, String>> feedList = mDatabase.getFeedMap(mDB, mCursor);
+			final List<Map<String, String>> feedList = mDatabase.getFeedMap(mDB, mCursor);
 			
 			// add feed to ListView
-			SimpleAdapter adapter = new SimpleAdapter(this, feedList, android.R.layout.simple_list_item_2, new String[] {"name", "numItems"}, new int[] {android.R.id.text1, android.R.id.text2});
+			adapter = new SimpleAdapter(this, feedList, android.R.layout.simple_list_item_2, new String[] {"name", "numItems"}, new int[] {android.R.id.text1, android.R.id.text2});
 			final ListView lstFeeds = (ListView)findViewById(R.id.listViewFeeds);
 			lstFeeds.setAdapter(adapter);
 			
@@ -162,6 +170,7 @@ public class MainActivity extends Activity {
 					Bundle bundle = new Bundle();
 					mCursor.moveToPosition(position);
 					bundle.putString("id", mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
+					bundle.putString("numItems", feedList.get(position).values().toArray()[0].toString());
 					Intent intent = new Intent(parent.getContext(), FeedActivity.class);
 					intent.putExtras(bundle);
 					startActivityForResult(intent, 0);

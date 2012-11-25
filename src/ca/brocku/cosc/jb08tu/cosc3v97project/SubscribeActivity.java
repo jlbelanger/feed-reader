@@ -7,11 +7,9 @@ import android.app.AlertDialog.Builder;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.support.v4.app.NavUtils;
 
 public class SubscribeActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -35,15 +33,6 @@ public class SubscribeActivity extends Activity {
 		return true;
 	}
 	
-	@Override public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
-		case android.R.id.home:
-			NavUtils.navigateUpFromSameTask(this);
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
-	
 	@Override protected void onDestroy() {
 		super.onDestroy();
 		if(mDB != null) {
@@ -63,12 +52,12 @@ public class SubscribeActivity extends Activity {
 				
 				// get EditText value
 				String url = txtURL.getText().toString().trim();
-				if(!url.startsWith("http")) {
+				if(!url.equals("") && !url.startsWith("http")) {
 					url = "http://" + url;
 				}
 				
 				// check for valid URL
-				if(!Utilities.isValidURL(url)) {
+				if(!Utilities.isValidURL(url) || url.equals("")) {
 					Builder dialog = new AlertDialog.Builder(SubscribeActivity.this);
 					dialog.setMessage(R.string.message_invalid_rss);
 					dialog.setPositiveButton(R.string.button_ok, null);
@@ -80,7 +69,11 @@ public class SubscribeActivity extends Activity {
 				String name = UtilitiesXML.getFeedTitle(url);
 				
 				// update database
-				mDatabase.addFeed(mDB, name, url);
+				Feed feed = mDatabase.addFeed(mDB, name, url);
+				
+				if(Utilities.hasNetworkConnection(getApplicationContext())) {
+					Utilities.downloadNewFeedItems(getApplicationContext(), mDatabase, mDB, feed);
+				}
 				
 				// return to main activity
 				Intent intent = new Intent(SubscribeActivity.this, MainActivity.class);

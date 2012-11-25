@@ -23,6 +23,11 @@
             android:numeric="integer"
             android:summary="@string/settings_summary_update_interval"
             android:title="@string/settings_update_interval" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="enable_notifications"
+            android:title="@string/settings_enable_notifications" />
     </PreferenceCategory>
 
 </PreferenceScreen>

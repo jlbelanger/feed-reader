@@ -43,18 +43,20 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		super.onOpen(db);
 	}
 	
-	public void addFeed(SQLiteDatabase mDB, String name, String url) {
+	public Feed addFeed(SQLiteDatabase mDB, String name, String url) {
 		mDB.beginTransaction();
+		long id = 0;
 		try {
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_NAME, name);
 			contentValues.put(Feeds.FEED_URL, url);
-			mDB.insert(Feeds.FEEDS_TABLE_NAME, null, contentValues);
+			id = mDB.insert(Feeds.FEEDS_TABLE_NAME, null, contentValues);
 			mDB.setTransactionSuccessful();
 		}
 		finally {
 			mDB.endTransaction();
 		}
+		return new Feed("" + id, name, url);
 	}
 	
 	public void addFeedItem(Context context, SQLiteDatabase mDB, FeedItem feedItem) {
@@ -95,6 +97,18 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		mDB.beginTransaction();
 		try {
 			mDB.delete(Feeds.FEEDS_TABLE_NAME, Feeds._ID + "=?", new String[] {feedId});
+			mDB.setTransactionSuccessful();
+		}
+		finally {
+			mDB.endTransaction();
+		}
+		this.deleteAllFeedItems(mDB, feedId);
+	}
+	
+	public void deleteAllFeedItems(SQLiteDatabase mDB, String feedId) {
+		mDB.beginTransaction();
+		try {
+			int num = mDB.delete(Feeds.FEED_ITEMS_TABLE_NAME, Feeds.FEED_ITEM_FEED_ID + "=?", new String[] {feedId});
 			mDB.setTransactionSuccessful();
 		}
 		finally {

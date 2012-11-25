@@ -28,8 +28,8 @@
 
             <EditText
                 android:id="@+id/editTextURL"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:hint="@string/hint_url" >
 
                 <requestFocus />
@@ -43,8 +43,8 @@
 
             <Button
                 android:id="@+id/buttonSubscribe"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/button_subscribe" />
         </TableRow>
     </TableLayout>

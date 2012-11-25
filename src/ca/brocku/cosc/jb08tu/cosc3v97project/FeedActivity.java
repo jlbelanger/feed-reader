@@ -1,7 +1,5 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
-import java.util.List;
-
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 
 import android.os.Bundle;
@@ -15,6 +13,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 
 public class FeedActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -85,14 +84,20 @@ public class FeedActivity extends Activity {
 		if(bundle != null) {
 			// get feed
 			feedId = bundle.getString("id");
+			// String numItems = bundle.getString("numItems");
 			feed = mDatabase.getFeed(mDB, feedId);
 			
 			// update interface
-			setTitle(feed.getName());
+			// if(numItems != null) {
+			// setTitle(feed.getName());
+			// }
+			// else {
+			// setTitle(feed.getName() + " (" + numItems + ")");
+			// }
 			
 			// check for network connection
-			if(Utilities.hasNetworkConnection(this)) {
-				downloadNewFeedItems();
+			if(Utilities.hasNetworkConnection(this.getApplicationContext())) {
+				Utilities.downloadNewFeedItems(this.getApplicationContext(), mDatabase, mDB, feed);
 			}
 			else {
 				returnToMain();
@@ -105,15 +110,16 @@ public class FeedActivity extends Activity {
 			mCursor = queryBuilder.query(mDB, columns, Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?", new String[] {feed.getId(), "0"}, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
 			Utilities.loadFeedItemsFromDatabase(this, mDatabase, mDB, mCursor, feed);
 			mCursor.close();
+			
+			final ListView lstFeedItems = (ListView)findViewById(R.id.listViewFeedItems);
+			int count = lstFeedItems.getCount();
+			String numItems = "" + count;
+			numItems += " item";
+			if(count != 1) {
+				numItems += "s";
+			}
+			setTitle(feed.getName() + " (" + numItems + ")");
 		}
-	}
-	
-	private void downloadNewFeedItems() {
-		// get new feed items
-		final List<FeedItem> feedItems = UtilitiesXML.getNewFeedItems(this, mDatabase, mDB, feed);
-		
-		// add new items to database
-		mDatabase.addNewFeedItemsToDatabase(feedItems, this.getApplicationContext(), mDB);
 	}
 	
 	private void returnToMain() {

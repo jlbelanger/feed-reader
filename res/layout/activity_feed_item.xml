@@ -40,13 +40,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" >
 
-            <TextView
+            <WebView
                 android:id="@+id/textViewContent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingBottom="10dp"
-                android:scrollbars="vertical"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                android:scrollbars="vertical" />
         </TableRow>
     </TableLayout>
 

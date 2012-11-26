@@ -36,17 +36,22 @@ public class FeedService extends IntentService {
 			while(true) {
 				Log.i("feed", i + ": checking feeds...");
 				for(Feed feed : feeds) {
-					feedItems = UtilitiesXML.getNewFeedItems(this, mDatabase, mDB, feed);
-					if(feedItems.size() > 0) {
-						mDatabase.addNewFeedItemsToDatabase(feedItems, getApplicationContext(), mDB);
-						result = Activity.RESULT_OK;
-						Message message = Message.obtain();
-						message.arg1 = result;
-						message.obj = feed;
-						try {
-							messenger.send(message);
+					if(mDatabase.doesFeedExist(mDB, feed.getId())) {
+						feedItems = UtilitiesXML.getNewFeedItems(this, mDatabase, mDB, feed);
+						if(feedItems.size() > 0) {
+							mDatabase.addNewFeedItemsToDatabase(mDB, feedItems);
+							result = Activity.RESULT_OK;
+							Message message = Message.obtain();
+							message.arg1 = result;
+							message.obj = feed;
+							try {
+								messenger.send(message);
+							}
+							catch(android.os.RemoteException e) {}
 						}
-						catch(android.os.RemoteException e) {}
+					}
+					else {
+						feeds.remove(feed);
 					}
 				}
 				SystemClock.sleep(updateInterval);

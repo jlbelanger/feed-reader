@@ -18,23 +18,33 @@ public class SubscribeActivity extends Activity {
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_subscribe);
-		
-		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
-		mDB = mDatabase.getWritableDatabase();
+		openDatabase();
 	}
 	
 	@Override public void onStart() {
 		super.onStart();
-		displaySubscribe();
+		openDatabase();
+		displayActivity();
 	}
 	
-	@Override public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_subscribe, menu);
-		return true;
+	@Override public void onPause() {
+		super.onPause();
+		closeDatabase();
 	}
 	
 	@Override protected void onDestroy() {
 		super.onDestroy();
+		closeDatabase();
+	}
+	
+	private void openDatabase() {
+		if(mDatabase == null || mDB == null || !mDB.isOpen()) {
+			mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
+			mDB = mDatabase.getReadableDatabase();
+		}
+	}
+	
+	private void closeDatabase() {
 		if(mDB != null) {
 			mDB.close();
 		}
@@ -43,7 +53,13 @@ public class SubscribeActivity extends Activity {
 		}
 	}
 	
-	private void displaySubscribe() {
+	@Override public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_subscribe, menu);
+		return true;
+	}
+	
+	private void displayActivity() {
+		// create submit button listener
 		final Button btnSubscribe = (Button)findViewById(R.id.buttonSubscribe);
 		btnSubscribe.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -59,6 +75,7 @@ public class SubscribeActivity extends Activity {
 				// check for valid URL
 				url = Utilities.getValidURL(url);
 				if(url.equals("")) {
+					// not valid; do not allow submit
 					Builder dialog = new AlertDialog.Builder(SubscribeActivity.this);
 					dialog.setMessage(R.string.message_invalid_rss);
 					dialog.setPositiveButton(R.string.button_ok, null);
@@ -66,12 +83,13 @@ public class SubscribeActivity extends Activity {
 					return;
 				}
 				
-				// get feed name
-				String name = UtilitiesXML.getFeedTitle(url);
+				// retrieve feed title from XML file
+				String title = UtilitiesXML.getFeedTitle(url);
 				
 				// update database
-				Feed feed = mDatabase.addFeed(mDB, name, url);
+				Feed feed = mDatabase.addFeed(mDB, title, url);
 				
+				// retrieve feed items from XML file
 				if(Utilities.hasNetworkConnection(getApplicationContext())) {
 					Utilities.downloadNewFeedItems(getApplicationContext(), mDatabase, mDB, feed);
 				}

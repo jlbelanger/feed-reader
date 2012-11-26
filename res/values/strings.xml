@@ -15,11 +15,10 @@
     <string name="title_activity_edit_feed">Edit Feed</string>
     <string name="title_activity_feed_item">Feed Item</string>
     <string name="title_activity_aggregated">Aggregated Feed</string>
-    <string name="hint_url">http://rss.cbc.ca/lineup/topstories.xml</string>
+    <string name="hint_url">news.google.com</string>
     <string name="hint_feed_name">CBC Top Stories</string>
     <string name="button_unsubscribe">Unsubscribe</string>
     <string name="button_subscribe">Subscribe</string>
-    <string name="button_refresh">Refresh</string>
     <string name="button_ok">OK</string>
     <string name="button_cancel">Cancel</string>
     <string name="button_edit_feed">Edit Feed</string>
@@ -34,8 +33,7 @@
     <string name="settings_summary_update_interval">How often the app checks for updates (in seconds).</string>
     <string name="settings_summary_enable_notifications">Send notifications when a feed is updated.</string>
     <string name="settings_summary_auto_mark_as_read">Automatically mark feed items as read when they are selected.</string>
-    <string name="message_no_network">You aren\'t connected to the internet, so this app is pretty useless.</string>
-    <string name="message_invalid_rss">This is not a valid RSS file.</string>
+    <string name="message_invalid_rss">Could not find a valid RSS file at this address.</string>
     <string name="default_time_format">H:mm</string>
     <string name="default_date_format">yyyy/MM/dd</string>
     <string name="default_update_interval">15</string>

@@ -7,41 +7,62 @@ import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 
 import android.os.Bundle;
 import android.app.Activity;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import android.widget.TextView;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
-import android.text.method.ScrollingMovementMethod;
 
 public class FeedItemActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
 	protected SQLiteDatabase		mDB			= null;
-	private static String			feedId		= "";
 	private static String			feedItemId	= "";
 	
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_feed_item);
-		
-		mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
-		mDB = mDatabase.getWritableDatabase();
+		openDatabase();
 	}
 	
 	@Override public void onStart() {
 		super.onStart();
-		displayFeedItem();
+		openDatabase();
+		displayActivity();
+	}
+	
+	@Override public void onPause() {
+		super.onPause();
+		closeDatabase();
+	}
+	
+	@Override protected void onDestroy() {
+		super.onDestroy();
+		closeDatabase();
+	}
+	
+	private void openDatabase() {
+		if(mDatabase == null || mDB == null || !mDB.isOpen()) {
+			mDatabase = new FeedDatabaseHelper(this.getApplicationContext());
+			mDB = mDatabase.getReadableDatabase();
+		}
+	}
+	
+	private void closeDatabase() {
+		if(mDB != null) {
+			mDB.close();
+		}
+		if(mDatabase != null) {
+			mDatabase.close();
+		}
 	}
 	
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_feed_item, menu);
 		
-		// mark as read
+		// create mark as read option
 		MenuItem menuItem = menu.findItem(R.id.menu_mark_as_read);
 		menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
 			@Override public boolean onMenuItemClick(MenuItem item) {
@@ -54,28 +75,17 @@ public class FeedItemActivity extends Activity {
 		return true;
 	}
 	
-	@Override protected void onDestroy() {
-		super.onDestroy();
-		if(mDB != null) {
-			mDB.close();
-		}
-		if(mDatabase != null) {
-			mDatabase.close();
-		}
-	}
-	
-	private void displayFeedItem() {
+	private void displayActivity() {
 		Bundle bundle = this.getIntent().getExtras();
 		if(bundle != null) {
-			// get feed
-			Feed feed = (Feed)bundle.getSerializable("feed");
-			feedId = feed.getId();
-			
 			// get feed item
-			FeedItem feedItem = (FeedItem)bundle.getSerializable("feedItem");
-			feedItemId = feedItem.getId();
+			feedItemId = bundle.getString(Feeds._ID);
+			FeedItem feedItem = mDatabase.getFeedItem(mDB, feedItemId);
 			
-			// update interface
+			// get feed
+			Feed feed = mDatabase.getFeed(mDB, feedItem.getFeedId());
+			
+			// set activity title
 			setTitle(feed.getName());
 			
 			// get TextView
@@ -83,7 +93,7 @@ public class FeedItemActivity extends Activity {
 			final TextView txtDate = (TextView)findViewById(R.id.textViewDate);
 			final WebView txtContent = (WebView)findViewById(R.id.textViewContent);
 			
-			// set TextView
+			// set TextView values
 			txtTitle.setText(Html.fromHtml("<a href=\"" + feedItem.getLink() + "\">" + feedItem.getTitle() + "</a>"));
 			txtTitle.setMovementMethod(LinkMovementMethod.getInstance());
 			txtDate.setText(feedItem.getPrettyDate(this.getApplicationContext()));
@@ -93,10 +103,10 @@ public class FeedItemActivity extends Activity {
 				txtContent.loadData(URLEncoder.encode(content, "utf-8").replaceAll("\\+", " "), "text/html", "utf-8");
 			}
 			catch(UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				txtContent.loadData("Error reading description.", "text/html", "utf-8");
 			}
 			
+			// get preferences and this feed item as read
 			SharedPreferences preferences = getApplicationContext().getSharedPreferences("preferences", 0);
 			boolean autoMarkAsRead = preferences.getBoolean("auto_mark_as_read", false);
 			if(autoMarkAsRead) {

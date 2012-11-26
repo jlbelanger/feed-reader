@@ -5,16 +5,24 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 
 class FeedDatabaseHelper extends SQLiteOpenHelper {
 	private static final String	DATABASE_NAME		= "feeds.db";
@@ -45,22 +53,23 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 	
 	public Feed addFeed(SQLiteDatabase mDB, String name, String url) {
 		mDB.beginTransaction();
-		long id = 0;
+		long feedId = 0;
 		try {
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_NAME, name);
 			contentValues.put(Feeds.FEED_URL, url);
-			id = mDB.insert(Feeds.FEEDS_TABLE_NAME, null, contentValues);
+			feedId = mDB.insert(Feeds.FEEDS_TABLE_NAME, null, contentValues);
 			mDB.setTransactionSuccessful();
 		}
 		finally {
 			mDB.endTransaction();
 		}
-		return new Feed("" + id, name, url);
+		return new Feed("" + feedId, name, url);
 	}
 	
-	public void addFeedItem(Context context, SQLiteDatabase mDB, FeedItem feedItem) {
+	public FeedItem addFeedItem(SQLiteDatabase mDB, FeedItem feedItem) {
 		mDB.beginTransaction();
+		long feedItemId = 0;
 		try {
 			Log.i("feed", "---add feed item " + Utilities.chop(feedItem.getTitle()));
 			ContentValues contentValues = new ContentValues();
@@ -71,12 +80,14 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 			contentValues.put(Feeds.FEED_ITEM_DESCRIPTION, feedItem.getDescription());
 			contentValues.put(Feeds.FEED_ITEM_CONTENT_ENCODED, feedItem.getContent());
 			contentValues.put(Feeds.FEED_ITEM_IS_READ, 0);
-			mDB.insert(Feeds.FEED_ITEMS_TABLE_NAME, null, contentValues);
+			feedItemId = mDB.insert(Feeds.FEED_ITEMS_TABLE_NAME, null, contentValues);
+			feedItem.setId("" + feedItemId);
 			mDB.setTransactionSuccessful();
 		}
 		finally {
 			mDB.endTransaction();
 		}
+		return feedItem;
 	}
 	
 	public void editFeed(SQLiteDatabase mDB, String feedId, String name, String url) {
@@ -105,10 +116,10 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		this.deleteAllFeedItems(mDB, feedId);
 	}
 	
-	public void deleteAllFeedItems(SQLiteDatabase mDB, String feedId) {
+	private void deleteAllFeedItems(SQLiteDatabase mDB, String feedId) {
 		mDB.beginTransaction();
 		try {
-			int num = mDB.delete(Feeds.FEED_ITEMS_TABLE_NAME, Feeds.FEED_ITEM_FEED_ID + "=?", new String[] {feedId});
+			mDB.delete(Feeds.FEED_ITEMS_TABLE_NAME, Feeds.FEED_ITEM_FEED_ID + "=?", new String[] {feedId});
 			mDB.setTransactionSuccessful();
 		}
 		finally {
@@ -142,9 +153,19 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	public void addNewFeedItemsToDatabase(SQLiteDatabase mDB, List<FeedItem> feedItems) {
+		for(FeedItem feedItem : feedItems) {
+			if(!this.doesFeedItemExist(mDB, feedItem.getFeedId(), feedItem.getTitle(), feedItem.getSortDate())) {
+				this.addFeedItem(mDB, feedItem);
+			}
+		}
+	}
+	
 	public Feed getFeed(SQLiteDatabase mDB, String feedId) {
-		String columns[] = {Feeds.FEED_NAME, Feeds.FEED_URL};
-		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, Feeds._ID + "=?", new String[] {feedId}, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
+		String[] columns = {Feeds.FEED_NAME, Feeds.FEED_URL};
+		String selection = Feeds._ID + "=?";
+		String[] selectionArgs = new String[] {feedId};
+		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
 		mCursor.moveToFirst();
 		Feed feed = null;
 		if(mCursor.getCount() > 0) {
@@ -157,8 +178,10 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public FeedItem getFeedItem(SQLiteDatabase mDB, String feedItemId) {
-		String columns[] = {Feeds.FEED_ITEM_FEED_ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_PUB_DATE, Feeds.FEED_ITEM_LINK, Feeds.FEED_ITEM_DESCRIPTION, Feeds.FEED_ITEM_CONTENT_ENCODED, Feeds.FEED_ITEM_IS_READ};
-		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, Feeds._ID + "=?", new String[] {feedItemId}, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
+		String[] columns = {Feeds.FEED_ITEM_FEED_ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_PUB_DATE, Feeds.FEED_ITEM_LINK, Feeds.FEED_ITEM_DESCRIPTION, Feeds.FEED_ITEM_CONTENT_ENCODED, Feeds.FEED_ITEM_IS_READ};
+		String selection = Feeds._ID + "=?";
+		String[] selectionArgs = new String[] {feedItemId};
+		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
 		mCursor.moveToFirst();
 		FeedItem feedItem = null;
 		if(mCursor.getCount() > 0) {
@@ -179,74 +202,116 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedItem;
 	}
 	
-	public boolean doesFeedItemExist(SQLiteDatabase mDB, String feedId, String title, String pubDate) {
-		String columns[] = {Feeds._ID};
-		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_TITLE + "=? AND " + Feeds.FEED_ITEM_PUB_DATE + "=?", new String[] {feedId, title, pubDate}, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
-		int count = mCursor.getCount();
+	public boolean doesFeedExist(SQLiteDatabase mDB, String feedId) {
+		String[] columns = {Feeds._ID};
+		String selection = Feeds._ID + "=?";
+		String[] selectionArgs = new String[] {feedId};
+		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
+		int numFeeds = mCursor.getCount();
 		mCursor.close();
-		if(count > 0) {
+		if(numFeeds > 0) {
 			return true;
 		}
 		return false;
 	}
 	
-	public int getNumUnreadFeedItems(SQLiteDatabase mDB, String feedId) {
-		String columns[] = {Feeds._ID};
-		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?", new String[] {feedId, "0"}, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
-		int count = mCursor.getCount();
+	public boolean doesFeedItemExist(SQLiteDatabase mDB, String feedId, String title, String pubDate) {
+		String[] columns = {Feeds._ID};
+		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_TITLE + "=? AND " + Feeds.FEED_ITEM_PUB_DATE + "=?";
+		String[] selectionArgs = new String[] {feedId, title, pubDate};
+		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
+		int numFeedItems = mCursor.getCount();
 		mCursor.close();
-		return count;
-	}
-	
-	public void addNewFeedItemsToDatabase(List<FeedItem> feedItems, Context context, SQLiteDatabase mDB) {
-		for(FeedItem feedItem : feedItems) {
-			if(!this.doesFeedItemExist(mDB, feedItem.getFeedId(), feedItem.getTitle(), feedItem.getSortDate())) {
-				this.addFeedItem(context, mDB, feedItem);
-			}
+		if(numFeedItems > 0) {
+			return true;
 		}
+		return false;
 	}
 	
-	public List<Map<String, String>> getFeedMap(SQLiteDatabase mDB, Cursor mCursor) {
-		List<Map<String, String>> feedList = new ArrayList<Map<String, String>>();
+	public int getNumFeeds(SQLiteDatabase mDB) {
+		String[] columns = {Feeds._ID};
+		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
+		int numFeeds = mCursor.getCount();
+		mCursor.close();
+		return numFeeds;
+	}
+	
+	public int getNumUnreadFeedItems(SQLiteDatabase mDB, String feedId) {
+		String[] columns = {Feeds._ID};
+		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?";
+		String[] selectionArgs = new String[] {feedId, "0"};
+		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
+		int numFeedItems = mCursor.getCount();
+		mCursor.close();
+		return numFeedItems;
+	}
+	
+	public String getFeedId(SQLiteDatabase mDB, int position) {
+		String[] columns = {Feeds._ID};
+		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
+		mCursor.moveToPosition(position);
+		String feedId = mCursor.getString(mCursor.getColumnIndex(Feeds._ID));
+		mCursor.close();
+		return feedId;
+	}
+	
+	public List<Feed> getFeedList(SQLiteDatabase mDB) {
+		String[] columns = {Feeds._ID};
+		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
+		List<Feed> feedList = new LinkedList<Feed>();
 		mCursor.moveToFirst();
-		int count = mCursor.getCount();
-		String[] numItems = new String[count];
-		int num = 0;
-		for(int i = 0; i < count; i++) {
-			num = this.getNumUnreadFeedItems(mDB, mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
-			numItems[i] = num + " item";
-			if(num != 1) {
-				numItems[i] = numItems[i] + "s";
-			}
-			Map<String, String> item = new HashMap<String, String>(2);
-			item.put(Feeds.FEED_NAME, mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_NAME)));
-			item.put("numItems", numItems[i]);
-			feedList.add(item);
+		int numFeeds = mCursor.getCount();
+		String feedId;
+		for(int i = 0; i < numFeeds; i++) {
+			feedId = mCursor.getString(mCursor.getColumnIndex(Feeds._ID));
+			feedList.add(this.getFeed(mDB, feedId));
 			mCursor.moveToNext();
 		}
+		mCursor.close();
 		return feedList;
 	}
 	
-	public List<Map<String, String>> getFeedItemMap(final Context context, SQLiteDatabase mDB, Cursor mCursor, String subtext) {
-		List<Map<String, String>> feedItemsList = new ArrayList<Map<String, String>>();
+	public List<Map<String, String>> getFeedMap(SQLiteDatabase mDB) {
+		String[] columns = {Feeds._ID, Feeds.FEED_NAME};
+		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
+		List<Map<String, String>> feedMap = new ArrayList<Map<String, String>>();
 		mCursor.moveToFirst();
-		DateFormat inDateFormat = Utilities.getDateFormatter("yyyy-MM-dd HH:mm:ss");
+		int numFeeds = mCursor.getCount();
+		int numUnreadItems = 0;
+		for(int i = 0; i < numFeeds; i++) {
+			Map<String, String> item = new HashMap<String, String>(2);
+			item.put(Feeds.FEED_NAME, mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_NAME)));
+			numUnreadItems = this.getNumUnreadFeedItems(mDB, mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
+			item.put("numItems", Utilities.getNumItems(numUnreadItems));
+			feedMap.add(item);
+			mCursor.moveToNext();
+		}
+		mCursor.close();
+		return feedMap;
+	}
+	
+	public List<Map<String, String>> getFeedItemMap(final Context context, SQLiteDatabase mDB, String[] columns, String selection, String[] selectionArgs, String subtext) {
+		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
+		mCursor.moveToFirst();
+		List<Map<String, String>> feedItemMap = new ArrayList<Map<String, String>>();
+		DateFormat inDateFormat = Utilities.getDateFormatter();
 		DateFormat outDateFormat = Utilities.getDateFormatter(context);
+		int numFeedItems = mCursor.getCount();
 		Date date = null;
-		int count = mCursor.getCount();
 		Feed feed;
-		for(int i = 0; i < count; i++) {
+		String pubDate;
+		for(int i = 0; i < numFeedItems; i++) {
 			Map<String, String> item = new HashMap<String, String>(2);
 			item.put(Feeds.FEED_ITEM_TITLE, mCursor.getString(mCursor.getColumnIndex(Feeds.FEED_ITEM_TITLE)));
 			if(subtext.equals(Feeds.FEED_ITEM_PUB_DATE)) {
+				pubDate = mCursor.getString(mCursor.getColumnIndex(subtext));
 				try {
-					date = inDateFormat.parse(mCursor.getString(mCursor.getColumnIndex(subtext)));
+					date = inDateFormat.parse(pubDate);
+					item.put(subtext, outDateFormat.format(date));
 				}
 				catch(ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					item.put(subtext, pubDate);
 				}
-				item.put(subtext, outDateFormat.format(date));
 			}
 			else if(subtext.equals(Feeds.FEED_ITEM_FEED_ID)) {
 				feed = this.getFeed(mDB, mCursor.getString(mCursor.getColumnIndex(subtext)));
@@ -260,9 +325,61 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 			else {
 				item.put(subtext, mCursor.getString(mCursor.getColumnIndex(subtext)));
 			}
-			feedItemsList.add(item);
+			feedItemMap.add(item);
 			mCursor.moveToNext();
 		}
-		return feedItemsList;
+		mCursor.close();
+		return feedItemMap;
+	}
+	
+	public int loadFeedItemsFromDatabase(final Activity activity, final SQLiteDatabase mDB, final Feed feed) {
+		String[] columns = {Feeds._ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_PUB_DATE};
+		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?";
+		String[] selectionArgs = new String[] {feed.getId(), "0"};
+		return this.loadFeedItemsFromDatabase(activity, mDB, columns, selection, selectionArgs, Feeds.FEED_ITEM_PUB_DATE, R.id.listViewFeedItems);
+	}
+	
+	public int loadAggregatedFeedItemsFromDatabase(final Activity activity, final SQLiteDatabase mDB) {
+		String[] columns = {Feeds._ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_FEED_ID};
+		String selection = Feeds.FEED_ITEM_IS_READ + "=?";
+		String[] selectionArgs = new String[] {"0"};
+		return this.loadFeedItemsFromDatabase(activity, mDB, columns, selection, selectionArgs, Feeds.FEED_ITEM_FEED_ID, R.id.listViewFeedItemsAggregated);
+	}
+	
+	public int loadFeedItemsFromDatabase(final Activity activity, final SQLiteDatabase mDB, String[] columns, String selection, String[] selectionArgs, String subtext, int listView) {
+		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
+		int numFeedItems = mCursor.getCount();
+		if(numFeedItems > 0) {
+			// get feed items
+			List<Map<String, String>> feedItemMap = this.getFeedItemMap(activity, mDB, columns, selection, selectionArgs, subtext);
+			
+			// get feed item id list
+			final List<String> feedItemIds = new LinkedList<String>();
+			mCursor.moveToFirst();
+			for(int i = 0; i < numFeedItems; i++) {
+				feedItemIds.add(mCursor.getString(mCursor.getColumnIndex(Feeds._ID)));
+				mCursor.moveToNext();
+			}
+			
+			// add feed items to ListView
+			SimpleAdapter adapter = new SimpleAdapter(activity, feedItemMap, android.R.layout.simple_list_item_2, new String[] {Feeds.FEED_ITEM_TITLE, subtext}, new int[] {android.R.id.text1, android.R.id.text2});
+			final ListView lstFeedItems = (ListView)activity.findViewById(listView);
+			lstFeedItems.setAdapter(adapter);
+			
+			// create feed item ListView item listener
+			lstFeedItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+				@Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+					// view selected feed item's activity
+					String currentFeedItemId = feedItemIds.get(position);
+					Bundle bundle = new Bundle();
+					bundle.putString(Feeds._ID, currentFeedItemId);
+					Intent intent = new Intent(parent.getContext(), FeedItemActivity.class);
+					intent.putExtras(bundle);
+					activity.startActivityForResult(intent, 0);
+				}
+			});
+		}
+		mCursor.close();
+		return numFeedItems;
 	}
 }

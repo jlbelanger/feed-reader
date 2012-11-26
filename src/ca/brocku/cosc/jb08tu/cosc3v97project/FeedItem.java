@@ -89,6 +89,10 @@ public class FeedItem implements Serializable {
 		return this.isRead;
 	}
 	
+	public void setId(String i) {
+		this.id = i;
+	}
+	
 	public String toString() {
 		return this.getTitle();
 	}

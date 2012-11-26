@@ -1,16 +1,18 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.content.Context;
@@ -52,8 +54,7 @@ public class UtilitiesXML {
 			String tagName = "";
 			String title = "", pubDate = "", link = "", description = "", contentEncoded = "";
 			boolean start = false;
-			DateFormat inDateFormat = Utilities.getDateFormatter("EEE, dd MMM yyyy kk:mm:ss zzz");
-			DateFormat outDateFormat = Utilities.getDateFormatter("yyyy-MM-dd HH:mm:ss");
+			DateFormat outDateFormat = Utilities.getDateFormatter();
 			Date date = null;
 			
 			while(eventType != XmlPullParser.END_DOCUMENT) {
@@ -69,13 +70,7 @@ public class UtilitiesXML {
 					}
 					else if(tagName.equals("pubDate") && pubDate.equals("")) {
 						pubDate = xmlPullParser.getText();
-						try {
-							date = inDateFormat.parse(pubDate);
-						}
-						catch(ParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+						date = new Date(pubDate);
 						pubDate = outDateFormat.format(date);
 					}
 					else if(tagName.equals("link") && link.equals("")) {
@@ -116,7 +111,16 @@ public class UtilitiesXML {
 				}
 			}
 		}
-		catch(Exception e) {
+		catch(XmlPullParserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return feedItems;

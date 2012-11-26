@@ -16,18 +16,11 @@
             android:layout_height="wrap_content" >
         </ListView>
 
-        <TextView
-            android:id="@+id/textViewNetworkConnection"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/message_no_network" >
-        </TextView>
-
         <Button
-            android:id="@+id/buttonRefresh"
+            android:id="@+id/buttonSubscribe"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="@string/button_refresh" />
+            android:text="@string/button_subscribe" />
     </TableLayout>
 
 </RelativeLayout>

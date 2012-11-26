@@ -13,12 +13,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 public class NetworkingThread extends AsyncTask<String, Void, String> {
 	@Override protected String doInBackground(String... arg) {
@@ -32,7 +30,7 @@ public class NetworkingThread extends AsyncTask<String, Void, String> {
 	}
 	
 	private static String getFeedURLFromHTML(String sURL) {
-		String line;
+		String line, newURL;
 		Pattern pattern;
 		Matcher matcher;
 		try {
@@ -41,10 +39,14 @@ public class NetworkingThread extends AsyncTask<String, Void, String> {
 			DataInputStream dataInputStream = new DataInputStream(inputStream);
 			while((line = dataInputStream.readLine()) != null) {
 				if(line.contains("type=\"application/rss+xml\"")) {
-					pattern = Pattern.compile("<link.*href=\"(.+)\".*/?>");
+					pattern = Pattern.compile("<link.*href=\"([^\"]+)\".*>");
 					matcher = pattern.matcher(line);
 					if(matcher.find()) {
-						return matcher.group(1);
+						newURL = matcher.group(1);
+						if(!newURL.substring(0, 4).equals("http")) {
+							newURL = Utilities.appendURLs(sURL, newURL);
+						}
+						return newURL;
 					}
 				}
 			}
@@ -67,24 +69,21 @@ public class NetworkingThread extends AsyncTask<String, Void, String> {
 			httpURLConnection.setRequestMethod("HEAD");
 			httpURLConnection.connect();
 			if(httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-				Map<String, List<String>> headerfields = httpURLConnection.getHeaderFields();
-				String contentType = headerfields.get("content-type").toString();
+				Map<String, List<String>> headerFields = httpURLConnection.getHeaderFields();
+				String contentType = headerFields.get("content-type").toString();
 				if(contentType.contains("text/xml")) {
 					return sURL;
 				}
 				else {
 					String alternateURL = getFeedURLFromHTML(sURL);
 					if(!alternateURL.equals("")) {
-						return alternateURL;
+						return getValidURL(alternateURL);
 					}
 					return "";
 				}
 			}
 		}
-		catch(MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		catch(MalformedURLException e) {}
 		catch(ProtocolException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -123,6 +122,6 @@ public class NetworkingThread extends AsyncTask<String, Void, String> {
 		catch(Exception e) {
 			e.printStackTrace();
 		}
-		return "";
+		return sURL;
 	}
 }

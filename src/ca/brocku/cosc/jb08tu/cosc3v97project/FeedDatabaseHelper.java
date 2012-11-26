@@ -202,6 +202,36 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedItem;
 	}
 	
+	public FeedItem getNextFeedItem(SQLiteDatabase mDB, FeedItem feedItem, boolean getPrevious) {
+		String[] columns = {Feeds._ID};
+		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND (" + Feeds.FEED_ITEM_IS_READ + "=? OR " + Feeds._ID + "=?)";
+		String[] selectionArgs = new String[] {feedItem.getFeedId(), "0", feedItem.getId()};
+		String orderBy = Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER;
+		if(getPrevious) {
+			orderBy = Feeds.FEED_ITEM_PUB_DATE + " ASC";
+		}
+		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, orderBy);
+		mCursor.moveToFirst();
+		int numFeedItems = mCursor.getCount();
+		String feedItemId;
+		boolean getThisOne = false;
+		for(int i = 0; i < numFeedItems; i++) {
+			feedItemId = mCursor.getString(mCursor.getColumnIndex(Feeds._ID));
+			mCursor.moveToNext();
+			if(feedItemId.equals(feedItem.getId())) {
+				getThisOne = true;
+				break;
+			}
+		}
+		if(getThisOne && !mCursor.isAfterLast()) {
+			feedItemId = mCursor.getString(mCursor.getColumnIndex(Feeds._ID));
+			mCursor.close();
+			return this.getFeedItem(mDB, feedItemId);
+		}
+		mCursor.close();
+		return null;
+	}
+	
 	public boolean doesFeedExist(SQLiteDatabase mDB, String feedId) {
 		String[] columns = {Feeds._ID};
 		String selection = Feeds._ID + "=?";

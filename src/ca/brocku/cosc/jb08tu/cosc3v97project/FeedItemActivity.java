@@ -2,17 +2,26 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.gesture.Gesture;
+import android.gesture.GestureLibraries;
+import android.gesture.GestureLibrary;
+import android.gesture.GestureOverlayView;
+import android.gesture.GestureOverlayView.OnGesturePerformedListener;
+import android.gesture.Prediction;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 
@@ -20,11 +29,49 @@ public class FeedItemActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
 	protected SQLiteDatabase		mDB			= null;
 	private static String			feedItemId	= "";
+	private static FeedItem			feedItem	= null;
+	private static GestureLibrary	gestureLibrary;
 	
 	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_feed_item);
 		openDatabase();
+		detectGestures();
+	}
+	
+	private void detectGestures() {
+		gestureLibrary = GestureLibraries.fromRawResource(this, R.raw.gestures);
+		if(!gestureLibrary.load()) {
+			finish();
+		}
+		GestureOverlayView gestureOverlayView = (GestureOverlayView)findViewById(R.id.gestures);
+		gestureOverlayView.addOnGesturePerformedListener(new OnGesturePerformedListener() {
+			public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture) {
+				ArrayList<Prediction> predictions = gestureLibrary.recognize(gesture);
+				if(predictions.size() > 0 && predictions.get(0).score > 1.0) {
+					String result = predictions.get(0).name;
+					if(result.equalsIgnoreCase("next")) {
+						FeedItem nextFeedItem = mDatabase.getNextFeedItem(mDB, feedItem, false);
+						viewFeedItem(nextFeedItem);
+					}
+					else if(result.equalsIgnoreCase("previous")) {
+						FeedItem previousFeedItem = mDatabase.getNextFeedItem(mDB, feedItem, true);
+						viewFeedItem(previousFeedItem);
+					}
+				}
+			}
+			
+			private void viewFeedItem(FeedItem feedItem) {
+				if(feedItem != null) {
+					Bundle bundle = new Bundle();
+					bundle.putString(Feeds._ID, feedItem.getId());
+					Intent intent = new Intent(getApplicationContext(), FeedItemActivity.class);
+					intent.putExtras(bundle);
+					startActivityForResult(intent, 0);
+				}
+				finish();
+			}
+		});
 	}
 	
 	@Override public void onStart() {
@@ -80,7 +127,7 @@ public class FeedItemActivity extends Activity {
 		if(bundle != null) {
 			// get feed item
 			feedItemId = bundle.getString(Feeds._ID);
-			FeedItem feedItem = mDatabase.getFeedItem(mDB, feedItemId);
+			feedItem = mDatabase.getFeedItem(mDB, feedItemId);
 			
 			// get feed
 			Feed feed = mDatabase.getFeed(mDB, feedItem.getFeedId());

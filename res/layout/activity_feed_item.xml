@@ -4,49 +4,59 @@
     android:layout_height="wrap_content"
     android:padding="10dp" >
 
-    <TableLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
+    <android.gesture.GestureOverlayView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/gestures"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:eventsInterceptionEnabled="true"
+        android:gestureStrokeType="multiple"
+        android:orientation="vertical" >
 
-        <TableRow
-            android:id="@+id/feedItem_tableRow1"
+        <TableLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" >
 
-            <TextView
-                android:id="@+id/textViewTitle"
+            <TableRow
+                android:id="@+id/feedItem_tableRow1"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textStyle="bold" />
-        </TableRow>
+                android:layout_height="wrap_content" >
 
-        <TableRow
-            android:id="@+id/feedItem_tableRow2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+                <TextView
+                    android:id="@+id/textViewTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textStyle="bold" />
+            </TableRow>
 
-            <TextView
-                android:id="@+id/textViewDate"
+            <TableRow
+                android:id="@+id/feedItem_tableRow2"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingBottom="10dp"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:textStyle="bold" />
-        </TableRow>
+                android:layout_height="wrap_content" >
 
-        <TableRow
-            android:id="@+id/feedItem_tableRow3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+                <TextView
+                    android:id="@+id/textViewDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="10dp"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textStyle="bold" />
+            </TableRow>
 
-            <WebView
-                android:id="@+id/textViewContent"
+            <TableRow
+                android:id="@+id/feedItem_tableRow3"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingBottom="10dp"
-                android:scrollbars="vertical" />
-        </TableRow>
-    </TableLayout>
+                android:layout_height="wrap_content" >
+
+                <WebView
+                    android:id="@+id/textViewContent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="10dp"
+                    android:scrollbars="vertical" />
+            </TableRow>
+        </TableLayout>
+    </android.gesture.GestureOverlayView>
 
 </RelativeLayout>

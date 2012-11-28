@@ -13,8 +13,6 @@ import android.os.SystemClock;
 import android.util.Log;
 
 public class FeedService extends IntentService {
-	private int	result	= Activity.RESULT_CANCELED;
-	
 	public FeedService() {
 		this("FeedService");
 	}
@@ -37,12 +35,11 @@ public class FeedService extends IntentService {
 				Log.i("feed", i + ": checking feeds...");
 				for(Feed feed : feeds) {
 					if(mDatabase.doesFeedExist(mDB, feed.getId())) {
-						feedItems = UtilitiesXML.getNewFeedItems(this, mDatabase, mDB, feed);
+						feedItems = Utilities.getNewFeedItems(mDatabase, mDB, feed);
 						if(feedItems.size() > 0) {
 							mDatabase.addNewFeedItemsToDatabase(mDB, feedItems);
-							result = Activity.RESULT_OK;
 							Message message = Message.obtain();
-							message.arg1 = result;
+							message.arg1 = Activity.RESULT_OK;
 							message.obj = feed;
 							try {
 								messenger.send(message);

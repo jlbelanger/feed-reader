@@ -5,6 +5,7 @@
     android:padding="10dp" >
 
     <TableLayout
+        android:id="@+id/tableLayout1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:stretchColumns="*" >
@@ -47,6 +48,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/button_subscribe" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/subscribe_tableRow4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <ProgressBar
+                android:id="@+id/progressBarSubscribe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminateOnly="true"
+                android:visibility="invisible" />
+
         </TableRow>
     </TableLayout>
 

@@ -70,7 +70,7 @@ public class FeedActivity extends Activity {
 		menuItemUnsubscribe.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
 			@Override public boolean onMenuItemClick(MenuItem item) {
 				AlertDialog.Builder dialog = new AlertDialog.Builder(FeedActivity.this);
-				dialog.setMessage("Unsubscribe from " + feed.getName() + "?");
+				dialog.setMessage(getResources().getString(R.string.message_unsubscribe) + feed.getName() + "?");
 				dialog.setNegativeButton(R.string.button_cancel, null);
 				dialog.setPositiveButton(R.string.button_unsubscribe, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
@@ -105,8 +105,8 @@ public class FeedActivity extends Activity {
 			
 			// check for network connection
 			if(Utilities.hasNetworkConnection(this.getApplicationContext())) {
-				// get new items for this feed
-				Utilities.downloadNewFeedItems(this.getApplicationContext(), mDatabase, mDB, feed);
+				// get new feed items for this feed
+				Utilities.downloadAndSaveNewFeedItems(mDatabase, mDB, feed);
 			}
 			
 			// load all feed items into ListView

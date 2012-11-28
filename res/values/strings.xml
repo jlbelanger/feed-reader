@@ -34,6 +34,10 @@
     <string name="settings_summary_enable_notifications">Send notifications when a feed is updated.</string>
     <string name="settings_summary_auto_mark_as_read">Automatically mark feed items as read when they are selected.</string>
     <string name="message_invalid_rss">Could not find a valid RSS file at this address.</string>
+    <string name="message_unsubscribe">Unsubscribe from </string>
+    <string name="message_content_error">Error reading description.</string>
+    <string name="message_validating_url">Validating URL...</string>
+    <string name="notification_body">New feed items from </string>
     <string name="default_time_format">H:mm</string>
     <string name="default_date_format">yyyy/MM/dd</string>
     <string name="default_update_interval">15</string>

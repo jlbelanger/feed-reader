@@ -1,5 +1,7 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import java.util.List;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.database.sqlite.SQLiteDatabase;
@@ -56,8 +58,15 @@ public class AggregatedActivity extends Activity {
 	private void displayActivity() {
 		// check for network connection
 		if(Utilities.hasNetworkConnection(this.getApplicationContext())) {
-			// get new items for all feeds
-			Utilities.downloadNewFeedItems(this.getApplicationContext(), mDatabase, mDB);
+			// get all feeds
+			List<Feed> feeds = mDatabase.getFeedList(mDB);
+			for(Feed feed : feeds) {
+				// get new feed items
+				final List<FeedItem> feedItems = Utilities.getNewFeedItems(mDatabase, mDB, feed);
+				
+				// add new feed items to database
+				mDatabase.addNewFeedItemsToDatabase(mDB, feedItems);
+			}
 		}
 		
 		// load all feed items into ListView

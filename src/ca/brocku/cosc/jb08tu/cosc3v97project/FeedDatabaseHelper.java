@@ -18,7 +18,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -71,7 +70,6 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		mDB.beginTransaction();
 		long feedItemId = 0;
 		try {
-			Log.i("feed", "---add feed item " + Utilities.chop(feedItem.getTitle()));
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_ITEM_FEED_ID, feedItem.getFeedId());
 			contentValues.put(Feeds.FEED_ITEM_TITLE, feedItem.getTitle());
@@ -203,13 +201,10 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public FeedItem getNextFeedItem(SQLiteDatabase mDB, FeedItem feedItem, boolean getPrevious) {
-		String[] columns = {Feeds._ID};
+		String[] columns = {Feeds._ID, Feeds.FEED_ITEM_TITLE};
 		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND (" + Feeds.FEED_ITEM_IS_READ + "=? OR " + Feeds._ID + "=?)";
 		String[] selectionArgs = new String[] {feedItem.getFeedId(), "0", feedItem.getId()};
 		String orderBy = Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER;
-		if(getPrevious) {
-			orderBy = Feeds.FEED_ITEM_PUB_DATE + " ASC";
-		}
 		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, orderBy);
 		mCursor.moveToFirst();
 		int numFeedItems = mCursor.getCount();
@@ -223,7 +218,11 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 				break;
 			}
 		}
-		if(getThisOne && !mCursor.isAfterLast()) {
+		if(getPrevious) {
+			mCursor.moveToPrevious();
+			mCursor.moveToPrevious();
+		}
+		if(getThisOne && !mCursor.isAfterLast() && !mCursor.isBeforeFirst()) {
 			feedItemId = mCursor.getString(mCursor.getColumnIndex(Feeds._ID));
 			mCursor.close();
 			return this.getFeedItem(mDB, feedItemId);

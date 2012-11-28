@@ -2,9 +2,6 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 
 import android.os.Bundle;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
-import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
 import android.view.View;
@@ -73,31 +70,7 @@ public class SubscribeActivity extends Activity {
 				}
 				
 				// check for valid URL
-				url = Utilities.getValidURL(url);
-				if(url.equals("")) {
-					// not valid; do not allow submit
-					Builder dialog = new AlertDialog.Builder(SubscribeActivity.this);
-					dialog.setMessage(R.string.message_invalid_rss);
-					dialog.setPositiveButton(R.string.button_ok, null);
-					dialog.show();
-					return;
-				}
-				
-				// retrieve feed title from XML file
-				String title = UtilitiesXML.getFeedTitle(url);
-				
-				// update database
-				Feed feed = mDatabase.addFeed(mDB, title, url);
-				
-				// retrieve feed items from XML file
-				if(Utilities.hasNetworkConnection(getApplicationContext())) {
-					Utilities.downloadNewFeedItems(getApplicationContext(), mDatabase, mDB, feed);
-				}
-				
-				// return to main activity
-				Intent intent = new Intent(SubscribeActivity.this, MainActivity.class);
-				startActivityForResult(intent, 0);
-				finish();
+				Utilities.getValidURL(SubscribeActivity.this, mDatabase, mDB, url);
 			}
 		});
 	}

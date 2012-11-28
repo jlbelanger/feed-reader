@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -21,7 +22,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 
@@ -58,6 +58,9 @@ public class FeedItemActivity extends Activity {
 						FeedItem previousFeedItem = mDatabase.getNextFeedItem(mDB, feedItem, true);
 						viewFeedItem(previousFeedItem);
 					}
+					else if(result.equalsIgnoreCase("view")) {
+						viewFeedItemOnline(feedItem);
+					}
 				}
 			}
 			
@@ -69,6 +72,12 @@ public class FeedItemActivity extends Activity {
 					intent.putExtras(bundle);
 					startActivityForResult(intent, 0);
 				}
+				finish();
+			}
+			
+			private void viewFeedItemOnline(FeedItem feedItem) {
+				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(feedItem.getLink()));
+				startActivity(intent);
 				finish();
 			}
 		});
@@ -150,7 +159,7 @@ public class FeedItemActivity extends Activity {
 				txtContent.loadData(URLEncoder.encode(content, "utf-8").replaceAll("\\+", " "), "text/html", "utf-8");
 			}
 			catch(UnsupportedEncodingException e) {
-				txtContent.loadData("Error reading description.", "text/html", "utf-8");
+				txtContent.loadData(getResources().getString(R.string.message_content_error), "text/html", "utf-8");
 			}
 			
 			// get preferences and this feed item as read

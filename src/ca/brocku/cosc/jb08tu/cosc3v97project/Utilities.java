@@ -3,7 +3,6 @@ package ca.brocku.cosc.jb08tu.cosc3v97project;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -20,20 +19,34 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class Utilities {
-	public static void downloadNewFeedItems(Context context, FeedDatabaseHelper mDatabase, SQLiteDatabase mDB) {
-		List<Feed> feeds = mDatabase.getFeedList(mDB);
-		for(Feed feed : feeds) {
-			// get new feed items
-			final List<FeedItem> feedItems = UtilitiesXML.getNewFeedItems(context, mDatabase, mDB, feed);
-			
-			// add new items to database
-			mDatabase.addNewFeedItemsToDatabase(mDB, feedItems);
+	public static List<FeedItem> getNewFeedItems(FeedDatabaseHelper mDatabase, SQLiteDatabase mDB, Feed feed) {
+		AsyncTask<String, Void, List<FeedItem>> task = new GetFeedItemsTask(mDatabase, mDB, feed);
+		task.execute();
+		try {
+			return task.get();
 		}
+		catch(Exception e) {}
+		return null;
 	}
 	
-	public static void downloadNewFeedItems(Context context, FeedDatabaseHelper mDatabase, SQLiteDatabase mDB, Feed feed) {
+	public static void getValidURL(SubscribeActivity activity, FeedDatabaseHelper mDatabase, SQLiteDatabase mDB, String url) {
+		AsyncTask<String, Void, String> task = new GetValidURLTask(activity, mDatabase, mDB, url);
+		task.execute();
+	}
+	
+	public static String getFeedTitle(String url) {
+		AsyncTask<String, Void, String> task = new GetFeedTitleTask(url);
+		task.execute();
+		try {
+			return task.get();
+		}
+		catch(Exception e) {}
+		return "";
+	}
+	
+	public static void downloadAndSaveNewFeedItems(FeedDatabaseHelper mDatabase, SQLiteDatabase mDB, Feed feed) {
 		// get new feed items
-		final List<FeedItem> feedItems = UtilitiesXML.getNewFeedItems(context, mDatabase, mDB, feed);
+		final List<FeedItem> feedItems = getNewFeedItems(mDatabase, mDB, feed);
 		
 		// add new items to database
 		mDatabase.addNewFeedItemsToDatabase(mDB, feedItems);
@@ -43,7 +56,7 @@ public class Utilities {
 		NotificationCompat.Builder notificationBuilder = new Builder(context);
 		notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
 		notificationBuilder.setContentTitle(context.getResources().getString(R.string.app_name));
-		notificationBuilder.setContentText("New feed items from " + feedName);
+		notificationBuilder.setContentText(context.getResources().getString(R.string.notification_body) + feedName);
 		
 		Intent intent = new Intent(context, MainActivity.class);
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
@@ -96,22 +109,6 @@ public class Utilities {
 			return true;
 		}
 		return false;
-	}
-	
-	public static String getValidURL(final String url) {
-		AsyncTask<String, Void, String> result = new NetworkingThread().execute("0", url);
-		try {
-			return result.get();
-		}
-		catch(InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return "";
 	}
 	
 	public static DateFormat getDateFormatter(Context context) {

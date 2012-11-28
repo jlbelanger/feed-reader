@@ -79,10 +79,6 @@ public class EditFeedActivity extends Activity {
 			final Button btnEditFeed = (Button)findViewById(R.id.buttonEditFeed);
 			btnEditFeed.setOnClickListener(new View.OnClickListener() {
 				public void onClick(View v) {
-					// get EditText
-					final EditText txtName = (EditText)findViewById(R.id.editTextName);
-					final EditText txtURL = (EditText)findViewById(R.id.editTextURL);
-					
 					// get EditText values
 					String name = txtName.getText().toString();
 					String url = txtURL.getText().toString();

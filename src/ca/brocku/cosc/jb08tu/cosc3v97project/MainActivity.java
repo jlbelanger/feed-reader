@@ -23,18 +23,10 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
 // TODO 
-// gestures
-
-// bug: subscribe hangs, mark as read hangs
-// bug: hangs when click on feed sometimes
-
-// bug: unknown host exception: host is unresolved (feeds.feedburner.com) from service
 // bug: when click on notification, taken to main activity, doesn't show correct number of items
-
-// move network, database stuff off UI thread
-// display some message if not connected to a network?
 // update number of items when a new feed item is found
-// landscape mode
+// animation when going to previous feed item
+// validate url on edit feed
 
 public class MainActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -50,7 +42,7 @@ public class MainActivity extends Activity {
 															if(enableNotifications) {
 																Utilities.sendNotification(getApplicationContext(), feed.getName());
 															}
-															adapter.notifyDataSetChanged(); // TODO don't think this works
+															adapter.notifyDataSetChanged();
 														}
 													};
 												};
@@ -59,7 +51,6 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		openDatabase();
-		// mDB.execSQL("DELETE FROM " + Feeds.FEED_ITEMS_TABLE_NAME + ";");
 		runService();
 	}
 	

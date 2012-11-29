@@ -56,7 +56,7 @@ public class Utilities {
 		NotificationCompat.Builder notificationBuilder = new Builder(context);
 		notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
 		notificationBuilder.setContentTitle(context.getResources().getString(R.string.app_name));
-		notificationBuilder.setContentText(context.getResources().getString(R.string.notification_body) + feedName);
+		notificationBuilder.setContentText(context.getResources().getString(R.string.notification_body) + " " + feedName);
 		
 		Intent intent = new Intent(context, MainActivity.class);
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);

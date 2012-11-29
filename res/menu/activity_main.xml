@@ -9,6 +9,10 @@
         android:title="@string/menu_settings">
     </item>
     <item
+        android:id="@+id/menu_refresh"
+        android:title="@string/menu_refresh">
+    </item>
+    <item
         android:id="@+id/menu_aggregated_view"
         android:title="@string/menu_aggregated_view">
     </item>

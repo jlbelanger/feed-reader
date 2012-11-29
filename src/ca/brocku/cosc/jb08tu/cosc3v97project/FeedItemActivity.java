@@ -1,7 +1,5 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import ca.brocku.cosc.jb08tu.cosc3v97project.FeedDatabase.Feeds;
@@ -154,13 +152,7 @@ public class FeedItemActivity extends Activity {
 			txtTitle.setMovementMethod(LinkMovementMethod.getInstance());
 			txtDate.setText(feedItem.getPrettyDate(this.getApplicationContext()));
 			String content = feedItem.getContent();
-			try {
-				// bug fix from http://code.google.com/p/android-rss/issues/detail?id=15
-				txtContent.loadData(URLEncoder.encode(content, "utf-8").replaceAll("\\+", " "), "text/html", "utf-8");
-			}
-			catch(UnsupportedEncodingException e) {
-				txtContent.loadData(getResources().getString(R.string.message_content_error), "text/html", "utf-8");
-			}
+			txtContent.loadDataWithBaseURL(null, content, "text/html", "utf-8", null);
 			
 			// get preferences and this feed item as read
 			SharedPreferences preferences = getApplicationContext().getSharedPreferences("preferences", 0);

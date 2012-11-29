@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -23,10 +24,10 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
 // TODO 
-// bug: when click on notification, taken to main activity, doesn't show correct number of items
-// update number of items when a new feed item is found
-// animation when going to previous feed item
+// after nav thru ALL items, return to feed view with gesture, still shows read items
+// lag on load feedactivity
 // validate url on edit feed
+// animation when going to previous feed item
 
 public class MainActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
@@ -42,7 +43,8 @@ public class MainActivity extends Activity {
 															if(enableNotifications) {
 																Utilities.sendNotification(getApplicationContext(), feed.getName());
 															}
-															adapter.notifyDataSetChanged();
+															openDatabase();
+															displayActivity();
 														}
 													};
 												};
@@ -56,6 +58,11 @@ public class MainActivity extends Activity {
 	
 	@Override public void onStart() {
 		super.onStart();
+		openDatabase();
+	}
+
+	@Override public void onResume() {
+		super.onResume();
 		openDatabase();
 		displayActivity();
 	}
@@ -91,6 +98,16 @@ public class MainActivity extends Activity {
 		Utilities.setIntentOnMenuItem(menu, R.id.menu_subscribe, new Intent(this, SubscribeActivity.class));
 		Utilities.setIntentOnMenuItem(menu, R.id.menu_settings, new Intent(this, SettingsActivity.class));
 		Utilities.setIntentOnMenuItem(menu, R.id.menu_aggregated_view, new Intent(this, AggregatedActivity.class));
+		
+		// create refresh option
+		MenuItem menuItem = menu.findItem(R.id.menu_refresh);
+		menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+			@Override public boolean onMenuItemClick(MenuItem item) {
+				displayActivity();
+				return true;
+			}
+		});
+		
 		return true;
 	}
 	

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ListView;
 
 public class AggregatedActivity extends Activity {
@@ -52,6 +53,17 @@ public class AggregatedActivity extends Activity {
 	
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_aggregated, menu);
+		
+		// create mark all as read option
+		MenuItem menuItemMarkAllAsRead = menu.findItem(R.id.menu_mark_all_as_read);
+		menuItemMarkAllAsRead.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+			@Override public boolean onMenuItemClick(MenuItem item) {
+				mDatabase.markAllFeedsItemsAsRead(mDB);
+				finish();
+				return true;
+			}
+		});
+		
 		return true;
 	}
 	

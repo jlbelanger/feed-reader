@@ -151,6 +151,19 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	public void markAllFeedsItemsAsRead(SQLiteDatabase mDB) {
+		mDB.beginTransaction();
+		try {
+			ContentValues contentValues = new ContentValues();
+			contentValues.put(Feeds.FEED_ITEM_IS_READ, "1");
+			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues,  Feeds.FEED_ITEM_IS_READ + "=?", new String[] {"0"});
+			mDB.setTransactionSuccessful();
+		}
+		finally {
+			mDB.endTransaction();
+		}
+	}
+	
 	public void addNewFeedItemsToDatabase(SQLiteDatabase mDB, List<FeedItem> feedItems) {
 		for(FeedItem feedItem : feedItems) {
 			if(!this.doesFeedItemExist(mDB, feedItem.getFeedId(), feedItem.getTitle(), feedItem.getSortDate())) {

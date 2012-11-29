@@ -1,5 +1,6 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 import android.app.Activity;
@@ -33,24 +34,27 @@ public class FeedService extends IntentService {
 			int i = 0;
 			while(true) {
 				Log.i("feed", i + ": checking feeds...");
-				for(Feed feed : feeds) {
-					if(mDatabase.doesFeedExist(mDB, feed.getId())) {
-						feedItems = Utilities.getNewFeedItems(mDatabase, mDB, feed);
-						if(feedItems.size() > 0) {
-							mDatabase.addNewFeedItemsToDatabase(mDB, feedItems);
-							Message message = Message.obtain();
-							message.arg1 = Activity.RESULT_OK;
-							message.obj = feed;
-							try {
-								messenger.send(message);
+				try {
+					for(Feed feed : feeds) {
+						if(mDatabase.doesFeedExist(mDB, feed.getId())) {
+							feedItems = Utilities.getNewFeedItems(mDatabase, mDB, feed);
+							if(feedItems.size() > 0) {
+								mDatabase.addNewFeedItemsToDatabase(mDB, feedItems);
+								Message message = Message.obtain();
+								message.arg1 = Activity.RESULT_OK;
+								message.obj = feed;
+								try {
+									messenger.send(message);
+								}
+								catch(android.os.RemoteException e) {}
 							}
-							catch(android.os.RemoteException e) {}
+						}
+						else {
+							feeds.remove(feed);
 						}
 					}
-					else {
-						feeds.remove(feed);
-					}
 				}
+				catch(ConcurrentModificationException e) {}
 				SystemClock.sleep(updateInterval);
 				i++;
 			}

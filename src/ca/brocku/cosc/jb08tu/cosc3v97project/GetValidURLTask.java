@@ -16,6 +16,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -94,7 +95,6 @@ public class GetValidURLTask extends AsyncTask<String, Void, String> {
 					alertDialog.show();
 				}
 			});
-			this.activity.finish();
 			return;
 		}
 		

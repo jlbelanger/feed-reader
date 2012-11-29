@@ -27,6 +27,11 @@ public class FeedActivity extends Activity {
 	@Override public void onStart() {
 		super.onStart();
 		openDatabase();
+	}
+	
+	@Override public void onResume() {
+		super.onResume();
+		openDatabase();
 		displayActivity();
 	}
 	
@@ -70,7 +75,7 @@ public class FeedActivity extends Activity {
 		menuItemUnsubscribe.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
 			@Override public boolean onMenuItemClick(MenuItem item) {
 				AlertDialog.Builder dialog = new AlertDialog.Builder(FeedActivity.this);
-				dialog.setMessage(getResources().getString(R.string.message_unsubscribe) + feed.getName() + "?");
+				dialog.setMessage(getResources().getString(R.string.message_unsubscribe) + " " + feed.getName() + "?");
 				dialog.setNegativeButton(R.string.button_cancel, null);
 				dialog.setPositiveButton(R.string.button_unsubscribe, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {

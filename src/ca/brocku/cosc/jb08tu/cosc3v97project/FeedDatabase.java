@@ -23,6 +23,6 @@ public final class FeedDatabase {
 		public static final String	FEED_ITEM_IS_READ				= "isRead";
 		
 		public static final String	FEEDS_DEFAULT_SORT_ORDER		= FEED_NAME + " ASC";
-		public static final String	FEED_ITEMS_DEFAULT_SORT_ORDER	= Feeds._ID + " ASC, " + FEED_ITEM_PUB_DATE + " DESC";
+		public static final String	FEED_ITEMS_DEFAULT_SORT_ORDER	= FEED_ITEM_PUB_DATE + " DESC, " + Feeds._ID + " ASC";
 	}
 }

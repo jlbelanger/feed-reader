@@ -1,11 +1,9 @@
 package ca.brocku.cosc.jb08tu.cosc3v97project;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +14,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -37,12 +34,21 @@ public class GetValidURLTask extends AsyncTask<String, Void, String> {
 		this.dialog = new ProgressDialog(this.activity);
 	}
 	
+	@Override protected void onPreExecute() {
+		super.onPreExecute();
+		if(!this.dialog.isShowing()) {
+			this.dialog.show();
+			this.dialog.setMessage(this.activity.getResources().getString(R.string.message_validating_url));
+		}
+	}
+	
 	protected String doInBackground(String... arg) {
 		this.getValidURL(this.sURL);
 		this.finish();
 		return this.sURL;
 	}
 	
+	// ensure the URL leads to a valid XML file; if not, scan the URL for a valid XML file address
 	private void getValidURL(String inURL) {
 		try {
 			URL url = new URL(inURL);
@@ -71,14 +77,6 @@ public class GetValidURLTask extends AsyncTask<String, Void, String> {
 		catch(Exception e) {}
 		this.sURL = "";
 		return;
-	}
-	
-	@Override protected void onPreExecute() {
-		super.onPreExecute();
-		if(!this.dialog.isShowing()) {
-			this.dialog.show();
-			this.dialog.setMessage(this.activity.getResources().getString(R.string.message_validating_url));
-		}
 	}
 	
 	private void finish() {
@@ -120,6 +118,7 @@ public class GetValidURLTask extends AsyncTask<String, Void, String> {
 		this.activity.finish();
 	}
 	
+	// the URL was not an XML file; search the file for a link to an XML feed
 	private String getFeedURLFromHTML(String inURL) {
 		String line, newURL;
 		Pattern pattern;
@@ -144,14 +143,7 @@ public class GetValidURLTask extends AsyncTask<String, Void, String> {
 				}
 			}
 		}
-		catch(MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		catch(Exception e) {}
 		return "";
 	}
 }

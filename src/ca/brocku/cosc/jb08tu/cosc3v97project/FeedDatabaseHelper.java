@@ -50,6 +50,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		super.onOpen(db);
 	}
 	
+	// add a new feed to the database
 	public Feed addFeed(SQLiteDatabase mDB, String name, String url) {
 		mDB.beginTransaction();
 		long feedId = 0;
@@ -66,6 +67,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return new Feed("" + feedId, name, url);
 	}
 	
+	// add a new feed item to the database
 	public FeedItem addFeedItem(SQLiteDatabase mDB, FeedItem feedItem) {
 		mDB.beginTransaction();
 		long feedItemId = 0;
@@ -88,6 +90,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedItem;
 	}
 	
+	// update a feed
 	public void editFeed(SQLiteDatabase mDB, String feedId, String name, String url) {
 		mDB.beginTransaction();
 		try {
@@ -102,6 +105,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	// delete a feed
 	public void deleteFeed(SQLiteDatabase mDB, String feedId) {
 		mDB.beginTransaction();
 		try {
@@ -114,6 +118,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		this.deleteAllFeedItems(mDB, feedId);
 	}
 	
+	// delete all feed items belonging to a feed
 	private void deleteAllFeedItems(SQLiteDatabase mDB, String feedId) {
 		mDB.beginTransaction();
 		try {
@@ -125,11 +130,17 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
-	public void markFeedItemAsRead(SQLiteDatabase mDB, String feedItemId) {
+	// update a feed item's isRead status
+	public void markFeedItemAsRead(SQLiteDatabase mDB, String feedItemId, boolean markAsRead) {
 		mDB.beginTransaction();
 		try {
 			ContentValues contentValues = new ContentValues();
-			contentValues.put(Feeds.FEED_ITEM_IS_READ, "1");
+			if(markAsRead) {
+				contentValues.put(Feeds.FEED_ITEM_IS_READ, "1");
+			}
+			else {
+				contentValues.put(Feeds.FEED_ITEM_IS_READ, "0");
+			}
 			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues, Feeds._ID + "=?", new String[] {feedItemId});
 			mDB.setTransactionSuccessful();
 		}
@@ -138,6 +149,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	// update all feed items in a feed's isRead status to read
 	public void markAllFeedsItemsAsRead(SQLiteDatabase mDB, String feedId) {
 		mDB.beginTransaction();
 		try {
@@ -151,12 +163,13 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	// update all feed items in the database's isRead status to read
 	public void markAllFeedsItemsAsRead(SQLiteDatabase mDB) {
 		mDB.beginTransaction();
 		try {
 			ContentValues contentValues = new ContentValues();
 			contentValues.put(Feeds.FEED_ITEM_IS_READ, "1");
-			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues,  Feeds.FEED_ITEM_IS_READ + "=?", new String[] {"0"});
+			mDB.update(Feeds.FEED_ITEMS_TABLE_NAME, contentValues, Feeds.FEED_ITEM_IS_READ + "=?", new String[] {"0"});
 			mDB.setTransactionSuccessful();
 		}
 		finally {
@@ -164,6 +177,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	// adds feed items in list to database
 	public void addNewFeedItemsToDatabase(SQLiteDatabase mDB, List<FeedItem> feedItems) {
 		for(FeedItem feedItem : feedItems) {
 			if(!this.doesFeedItemExist(mDB, feedItem.getFeedId(), feedItem.getTitle(), feedItem.getSortDate())) {
@@ -172,6 +186,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	// returns row for feed with given id
 	public Feed getFeed(SQLiteDatabase mDB, String feedId) {
 		String[] columns = {Feeds.FEED_NAME, Feeds.FEED_URL};
 		String selection = Feeds._ID + "=?";
@@ -188,6 +203,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feed;
 	}
 	
+	// returns row for feed item with given id
 	public FeedItem getFeedItem(SQLiteDatabase mDB, String feedItemId) {
 		String[] columns = {Feeds.FEED_ITEM_FEED_ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_PUB_DATE, Feeds.FEED_ITEM_LINK, Feeds.FEED_ITEM_DESCRIPTION, Feeds.FEED_ITEM_CONTENT_ENCODED, Feeds.FEED_ITEM_IS_READ};
 		String selection = Feeds._ID + "=?";
@@ -213,10 +229,19 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedItem;
 	}
 	
-	public FeedItem getNextFeedItem(SQLiteDatabase mDB, FeedItem feedItem, boolean getPrevious) {
+	// returns row for feed before/after feed with given id
+	public FeedItem getNextFeedItem(SQLiteDatabase mDB, FeedItem feedItem, boolean getPrevious, boolean showAll) {
 		String[] columns = {Feeds._ID, Feeds.FEED_ITEM_TITLE};
-		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND (" + Feeds.FEED_ITEM_IS_READ + "=? OR " + Feeds._ID + "=?)";
-		String[] selectionArgs = new String[] {feedItem.getFeedId(), "0", feedItem.getId()};
+		String selection = "";
+		String[] selectionArgs;
+		if(showAll) {
+			selection = Feeds.FEED_ITEM_FEED_ID + "=?";
+			selectionArgs = new String[] {feedItem.getFeedId()};
+		}
+		else {
+			selection = Feeds.FEED_ITEM_FEED_ID + "=? AND (" + Feeds.FEED_ITEM_IS_READ + "=? OR " + Feeds._ID + "=?)";
+			selectionArgs = new String[] {feedItem.getFeedId(), "0", feedItem.getId()};
+		}
 		String orderBy = Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER;
 		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, orderBy);
 		mCursor.moveToFirst();
@@ -244,6 +269,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return null;
 	}
 	
+	// returns true if there is a feed with the given id
 	public boolean doesFeedExist(SQLiteDatabase mDB, String feedId) {
 		String[] columns = {Feeds._ID};
 		String selection = Feeds._ID + "=?";
@@ -257,6 +283,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return false;
 	}
 	
+	// returns true if there is a feed item with the given id
 	public boolean doesFeedItemExist(SQLiteDatabase mDB, String feedId, String title, String pubDate) {
 		String[] columns = {Feeds._ID};
 		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_TITLE + "=? AND " + Feeds.FEED_ITEM_PUB_DATE + "=?";
@@ -270,14 +297,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return false;
 	}
 	
-	public int getNumFeeds(SQLiteDatabase mDB) {
-		String[] columns = {Feeds._ID};
-		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
-		int numFeeds = mCursor.getCount();
-		mCursor.close();
-		return numFeeds;
-	}
-	
+	// returns the number of unread feed items
 	public int getNumUnreadFeedItems(SQLiteDatabase mDB, String feedId) {
 		String[] columns = {Feeds._ID};
 		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?";
@@ -288,6 +308,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return numFeedItems;
 	}
 	
+	// returns id of the nth feed in the database
 	public String getFeedId(SQLiteDatabase mDB, int position) {
 		String[] columns = {Feeds._ID};
 		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
@@ -297,6 +318,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedId;
 	}
 	
+	// returns a list containing each feed in the database
 	public List<Feed> getFeedList(SQLiteDatabase mDB) {
 		String[] columns = {Feeds._ID};
 		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
@@ -313,6 +335,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedList;
 	}
 	
+	// returns a map containing each feed in the database
 	public List<Map<String, String>> getFeedMap(SQLiteDatabase mDB) {
 		String[] columns = {Feeds._ID, Feeds.FEED_NAME};
 		Cursor mCursor = mDB.query(Feeds.FEEDS_TABLE_NAME, columns, null, null, null, null, Feeds.FEEDS_DEFAULT_SORT_ORDER);
@@ -332,6 +355,7 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedMap;
 	}
 	
+	// returns a map containing each feed item meeting the given criteria in the database
 	public List<Map<String, String>> getFeedItemMap(final Context context, SQLiteDatabase mDB, String[] columns, String selection, String[] selectionArgs, String subtext) {
 		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
 		mCursor.moveToFirst();
@@ -374,21 +398,34 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 		return feedItemMap;
 	}
 	
-	public int loadFeedItemsFromDatabase(final Activity activity, final SQLiteDatabase mDB, final Feed feed) {
+	// loads all unread feed items for a given feed into a ListView
+	// returns the number of feed items in the ListView
+	public int loadFeedItemsFromDatabase(final Activity activity, final SQLiteDatabase mDB, final Feed feed, boolean showAll) {
 		String[] columns = {Feeds._ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_PUB_DATE};
-		String selection = Feeds.FEED_ITEM_FEED_ID + "=? AND " + Feeds.FEED_ITEM_IS_READ + "=?";
-		String[] selectionArgs = new String[] {feed.getId(), "0"};
-		return this.loadFeedItemsFromDatabase(activity, mDB, columns, selection, selectionArgs, Feeds.FEED_ITEM_PUB_DATE, R.id.listViewFeedItems);
+		String selection = Feeds.FEED_ITEM_FEED_ID + "=?";
+		String[] selectionArgs;
+		if(!showAll) {
+			selection += " AND " + Feeds.FEED_ITEM_IS_READ + "=?";
+			selectionArgs = new String[] {feed.getId(), "0"};
+		}
+		else {
+			selectionArgs = new String[] {feed.getId()};
+		}
+		return this.loadFeedItemsFromDatabase(activity, mDB, columns, selection, selectionArgs, Feeds.FEED_ITEM_PUB_DATE, R.id.listViewFeedItems, showAll);
 	}
 	
+	// loads all unread feed items into a ListView
+	// returns the number of feed items in the ListView
 	public int loadAggregatedFeedItemsFromDatabase(final Activity activity, final SQLiteDatabase mDB) {
 		String[] columns = {Feeds._ID, Feeds.FEED_ITEM_TITLE, Feeds.FEED_ITEM_FEED_ID};
 		String selection = Feeds.FEED_ITEM_IS_READ + "=?";
 		String[] selectionArgs = new String[] {"0"};
-		return this.loadFeedItemsFromDatabase(activity, mDB, columns, selection, selectionArgs, Feeds.FEED_ITEM_FEED_ID, R.id.listViewFeedItemsAggregated);
+		return this.loadFeedItemsFromDatabase(activity, mDB, columns, selection, selectionArgs, Feeds.FEED_ITEM_FEED_ID, R.id.listViewFeedItemsAggregated, false);
 	}
 	
-	public int loadFeedItemsFromDatabase(final Activity activity, final SQLiteDatabase mDB, String[] columns, String selection, String[] selectionArgs, String subtext, int listView) {
+	// loads feed items with given criteria into the given ListView
+	// returns the number of feed items in the ListView
+	public int loadFeedItemsFromDatabase(final Activity activity, final SQLiteDatabase mDB, String[] columns, String selection, String[] selectionArgs, String subtext, int listView, final boolean showAll) {
 		Cursor mCursor = mDB.query(Feeds.FEED_ITEMS_TABLE_NAME, columns, selection, selectionArgs, null, null, Feeds.FEED_ITEMS_DEFAULT_SORT_ORDER);
 		int numFeedItems = mCursor.getCount();
 		if(numFeedItems > 0) {
@@ -417,6 +454,12 @@ class FeedDatabaseHelper extends SQLiteOpenHelper {
 					bundle.putString(Feeds._ID, currentFeedItemId);
 					Intent intent = new Intent(parent.getContext(), FeedItemActivity.class);
 					intent.putExtras(bundle);
+					if(showAll) {
+						intent.putExtra("showAll", true);
+					}
+					else {
+						intent.putExtra("showAll", false);
+					}
 					activity.startActivityForResult(intent, 0);
 				}
 			});

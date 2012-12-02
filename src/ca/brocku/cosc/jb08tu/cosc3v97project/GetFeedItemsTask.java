@@ -26,6 +26,7 @@ public class GetFeedItemsTask extends AsyncTask<String, Void, List<FeedItem>> {
 		this.mDB = sLD;
 	}
 	
+	// read the XML file and return a list of feed items consisting of the data contained in the XML file
 	protected List<FeedItem> doInBackground(String... arg) {
 		List<FeedItem> feedItems = new LinkedList<FeedItem>();
 		try {

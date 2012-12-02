@@ -23,12 +23,6 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
-// TODO 
-// after nav thru ALL items, return to feed view with gesture, still shows read items
-// lag on load feedactivity
-// validate url on edit feed
-// animation when going to previous feed item
-
 public class MainActivity extends Activity {
 	protected FeedDatabaseHelper	mDatabase	= null;
 	protected SQLiteDatabase		mDB			= null;
@@ -60,7 +54,7 @@ public class MainActivity extends Activity {
 		super.onStart();
 		openDatabase();
 	}
-
+	
 	@Override public void onResume() {
 		super.onResume();
 		openDatabase();
@@ -115,12 +109,12 @@ public class MainActivity extends Activity {
 		// get all feeds
 		List<Feed> feeds = mDatabase.getFeedList(mDB);
 		
-		// get preferences, update interval
+		// get update interval
 		Context context = this.getApplicationContext();
 		SharedPreferences preferences = context.getSharedPreferences("preferences", 0);
 		int updateInterval = Integer.parseInt(preferences.getString("update_interval", context.getString(R.string.default_update_interval)));
 		
-		// run service
+		// start service
 		Intent intent = new Intent(this, FeedService.class);
 		Messenger messenger = new Messenger(handler);
 		intent.putExtra("messenger", messenger);

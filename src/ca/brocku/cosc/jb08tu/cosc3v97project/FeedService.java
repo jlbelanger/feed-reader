@@ -37,9 +37,14 @@ public class FeedService extends IntentService {
 				try {
 					for(Feed feed : feeds) {
 						if(mDatabase.doesFeedExist(mDB, feed.getId())) {
+							// look for new feed items
 							feedItems = Utilities.getNewFeedItems(mDatabase, mDB, feed);
+							
 							if(feedItems.size() > 0) {
+								// new feed items found; add to database
 								mDatabase.addNewFeedItemsToDatabase(mDB, feedItems);
+								
+								// / send message
 								Message message = Message.obtain();
 								message.arg1 = Activity.RESULT_OK;
 								message.obj = feed;
@@ -50,11 +55,14 @@ public class FeedService extends IntentService {
 							}
 						}
 						else {
+							// this feed was deleted; stop checking it
 							feeds.remove(feed);
 						}
 					}
 				}
 				catch(ConcurrentModificationException e) {}
+				
+				// wait
 				SystemClock.sleep(updateInterval);
 				i++;
 			}

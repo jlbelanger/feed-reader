@@ -17,6 +17,7 @@ public class GetFeedTitleTask extends AsyncTask<String, Void, String> {
 		this.sURL = u;
 	}
 	
+	// read the XML file and look for the title of the feed
 	protected String doInBackground(String... arg) {
 		try {
 			XmlPullParserFactory xmlPullParserFactory = XmlPullParserFactory.newInstance();
@@ -28,6 +29,7 @@ public class GetFeedTitleTask extends AsyncTask<String, Void, String> {
 			xmlPullParser.setInput(inputStreamReader);
 			int eventType = -1;
 			String tagName = "";
+			
 			while(eventType != XmlPullParser.END_DOCUMENT) {
 				if(eventType == XmlPullParser.START_TAG) {
 					tagName = xmlPullParser.getName();
@@ -39,12 +41,11 @@ public class GetFeedTitleTask extends AsyncTask<String, Void, String> {
 				}
 				eventType = xmlPullParser.next();
 			}
+			
 			inputStreamReader.close();
 			inputStream.close();
 		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
+		catch(Exception e) {}
 		return this.sURL;
 	}
 }

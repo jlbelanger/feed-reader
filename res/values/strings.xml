@@ -6,9 +6,12 @@
     <string name="menu_unsubscribe">Unsubscribe</string>
     <string name="menu_edit_feed">Edit Feed</string>
     <string name="menu_mark_as_read">Mark As Read</string>
+    <string name="menu_mark_as_unread">Mark As Unread</string>
     <string name="menu_mark_all_as_read">Mark All As Read</string>
     <string name="menu_aggregated_view">Aggregated View</string>
     <string name="menu_refresh">Refresh</string>
+    <string name="menu_view_all">View All</string>
+    <string name="menu_view_unread_only">View Unread Only</string>
     <string name="title_activity_main">FeedMe</string>
     <string name="title_activity_subscribe">Subscribe</string>
     <string name="title_activity_settings">Settings</string>
@@ -42,5 +45,7 @@
     <string name="default_time_format">H:mm</string>
     <string name="default_date_format">yyyy/MM/dd</string>
     <string name="default_update_interval">15</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_feed_all">FeedAllActivity</string>
 
 </resources>

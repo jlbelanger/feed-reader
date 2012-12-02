@@ -63,40 +63,58 @@ public class FeedActivity extends Activity {
 	
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_feed, menu);
-		
-		// create edit feed option
 		Bundle bundle = this.getIntent().getExtras();
-		Intent intent = new Intent(this, EditFeedActivity.class);
-		intent.putExtras(bundle);
-		Utilities.setIntentOnMenuItem(menu, R.id.menu_edit_feed, intent);
-		
-		// create unsubscribe option
-		MenuItem menuItemUnsubscribe = menu.findItem(R.id.menu_unsubscribe);
-		menuItemUnsubscribe.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-			@Override public boolean onMenuItemClick(MenuItem item) {
-				AlertDialog.Builder dialog = new AlertDialog.Builder(FeedActivity.this);
-				dialog.setMessage(getResources().getString(R.string.message_unsubscribe) + " " + feed.getName() + "?");
-				dialog.setNegativeButton(R.string.button_cancel, null);
-				dialog.setPositiveButton(R.string.button_unsubscribe, new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int id) {
-						mDatabase.deleteFeed(mDB, feedId);
+		if(bundle != null) {
+			// get feed
+			feedId = bundle.getString(Feeds._ID);
+			int numUnread = mDatabase.getNumUnreadFeedItems(mDB, feedId);
+			
+			// create edit feed option
+			bundle = this.getIntent().getExtras();
+			Intent intent = new Intent(this, EditFeedActivity.class);
+			intent.putExtras(bundle);
+			Utilities.setIntentOnMenuItem(menu, R.id.menu_edit_feed, intent);
+			
+			// create unsubscribe option
+			MenuItem menuItemUnsubscribe = menu.findItem(R.id.menu_unsubscribe);
+			menuItemUnsubscribe.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+				@Override public boolean onMenuItemClick(MenuItem item) {
+					AlertDialog.Builder dialog = new AlertDialog.Builder(FeedActivity.this);
+					dialog.setMessage(getResources().getString(R.string.message_unsubscribe) + " " + feed.getName() + "?");
+					dialog.setNegativeButton(R.string.button_cancel, null);
+					dialog.setPositiveButton(R.string.button_unsubscribe, new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							mDatabase.deleteFeed(mDB, feedId);
+							finish();
+						}
+					});
+					dialog.show();
+					return true;
+				}
+			});
+			
+			if(numUnread > 0) {
+				// create mark all as read option
+				menu.getItem(2).setEnabled(true);
+				MenuItem menuItemMarkAllAsRead = menu.findItem(R.id.menu_mark_all_as_read);
+				menuItemMarkAllAsRead.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+					@Override public boolean onMenuItemClick(MenuItem item) {
+						mDatabase.markAllFeedsItemsAsRead(mDB, feedId);
 						finish();
+						return true;
 					}
 				});
-				dialog.show();
-				return true;
 			}
-		});
-		
-		// create mark all as read option
-		MenuItem menuItemMarkAllAsRead = menu.findItem(R.id.menu_mark_all_as_read);
-		menuItemMarkAllAsRead.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-			@Override public boolean onMenuItemClick(MenuItem item) {
-				mDatabase.markAllFeedsItemsAsRead(mDB, feedId);
-				finish();
-				return true;
+			else {
+				menu.getItem(2).setEnabled(false);
 			}
-		});
+			
+			// create view all option
+			bundle = this.getIntent().getExtras();
+			intent = new Intent(this, FeedAllActivity.class);
+			intent.putExtras(bundle);
+			Utilities.setIntentOnMenuItem(menu, R.id.menu_view_all, intent);
+		}
 		
 		return true;
 	}
@@ -115,12 +133,12 @@ public class FeedActivity extends Activity {
 			}
 			
 			// load all feed items into ListView
-			mDatabase.loadFeedItemsFromDatabase(this, mDB, feed);
+			mDatabase.loadFeedItemsFromDatabase(this, mDB, feed, false);
 			
 			// set activity title
 			final ListView lstFeedItems = (ListView)findViewById(R.id.listViewFeedItems);
 			int numFeedItems = lstFeedItems.getCount();
-			setTitle(feed.getName() + " (" + Utilities.getNumItems(numFeedItems) + ")");
+			setTitle(feed.getName() + " (" + Utilities.getNumItems(numFeedItems) + " new)");
 		}
 	}
 }

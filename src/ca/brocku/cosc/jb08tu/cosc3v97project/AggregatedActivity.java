@@ -72,6 +72,8 @@ public class AggregatedActivity extends Activity {
 		if(Utilities.hasNetworkConnection(this.getApplicationContext())) {
 			// get all feeds
 			List<Feed> feeds = mDatabase.getFeedList(mDB);
+			
+			// for each feed
 			for(Feed feed : feeds) {
 				// get new feed items
 				final List<FeedItem> feedItems = Utilities.getNewFeedItems(mDatabase, mDB, feed);

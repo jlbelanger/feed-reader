@@ -28,6 +28,7 @@ public class FeedItemActivity extends Activity {
 	protected SQLiteDatabase		mDB			= null;
 	private static String			feedItemId	= "";
 	private static FeedItem			feedItem	= null;
+	private static boolean			showAll		= false;
 	private static GestureLibrary	gestureLibrary;
 	
 	@Override public void onCreate(Bundle savedInstanceState) {
@@ -35,50 +36,6 @@ public class FeedItemActivity extends Activity {
 		setContentView(R.layout.activity_feed_item);
 		openDatabase();
 		detectGestures();
-	}
-	
-	private void detectGestures() {
-		gestureLibrary = GestureLibraries.fromRawResource(this, R.raw.gestures);
-		if(!gestureLibrary.load()) {
-			finish();
-		}
-		GestureOverlayView gestureOverlayView = (GestureOverlayView)findViewById(R.id.gestures);
-		gestureOverlayView.addOnGesturePerformedListener(new OnGesturePerformedListener() {
-			public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture) {
-				ArrayList<Prediction> predictions = gestureLibrary.recognize(gesture);
-				if(predictions.size() > 0 && predictions.get(0).score > 1.0) {
-					String result = predictions.get(0).name;
-					if(result.equalsIgnoreCase("next")) {
-						FeedItem nextFeedItem = mDatabase.getNextFeedItem(mDB, feedItem, false);
-						viewFeedItem(nextFeedItem);
-					}
-					else if(result.equalsIgnoreCase("previous")) {
-						FeedItem previousFeedItem = mDatabase.getNextFeedItem(mDB, feedItem, true);
-						viewFeedItem(previousFeedItem);
-					}
-					else if(result.equalsIgnoreCase("view")) {
-						viewFeedItemOnline(feedItem);
-					}
-				}
-			}
-			
-			private void viewFeedItem(FeedItem feedItem) {
-				if(feedItem != null) {
-					Bundle bundle = new Bundle();
-					bundle.putString(Feeds._ID, feedItem.getId());
-					Intent intent = new Intent(getApplicationContext(), FeedItemActivity.class);
-					intent.putExtras(bundle);
-					startActivityForResult(intent, 0);
-				}
-				finish();
-			}
-			
-			private void viewFeedItemOnline(FeedItem feedItem) {
-				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(feedItem.getLink()));
-				startActivity(intent);
-				finish();
-			}
-		});
 	}
 	
 	@Override public void onStart() {
@@ -115,18 +72,84 @@ public class FeedItemActivity extends Activity {
 	
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_feed_item, menu);
-		
-		// create mark as read option
-		MenuItem menuItem = menu.findItem(R.id.menu_mark_as_read);
-		menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-			@Override public boolean onMenuItemClick(MenuItem item) {
-				mDatabase.markFeedItemAsRead(mDB, feedItemId);
+		Bundle bundle = this.getIntent().getExtras();
+		if(bundle != null) {
+			// get feed item
+			feedItemId = bundle.getString(Feeds._ID);
+			feedItem = mDatabase.getFeedItem(mDB, feedItemId);
+			if(feedItem.isRead()) {
+				menu.getItem(0).setEnabled(false);
+				
+				// create mark as unread option
+				MenuItem menuItem = menu.findItem(R.id.menu_mark_as_unread);
+				menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+					@Override public boolean onMenuItemClick(MenuItem item) {
+						mDatabase.markFeedItemAsRead(mDB, feedItemId, false);
+						finish();
+						return true;
+					}
+				});
+			}
+			else {
+				menu.getItem(1).setEnabled(false);
+				
+				// create mark as read option
+				MenuItem menuItem = menu.findItem(R.id.menu_mark_as_read);
+				menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+					@Override public boolean onMenuItemClick(MenuItem item) {
+						mDatabase.markFeedItemAsRead(mDB, feedItemId, true);
+						finish();
+						return true;
+					}
+				});
+			}
+		}
+		return true;
+	}
+	
+	private void detectGestures() {
+		gestureLibrary = GestureLibraries.fromRawResource(this, R.raw.gestures);
+		if(!gestureLibrary.load()) {
+			finish();
+		}
+		GestureOverlayView gestureOverlayView = (GestureOverlayView)findViewById(R.id.gestures);
+		gestureOverlayView.addOnGesturePerformedListener(new OnGesturePerformedListener() {
+			public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture) {
+				ArrayList<Prediction> predictions = gestureLibrary.recognize(gesture);
+				if(predictions.size() > 0 && predictions.get(0).score > 1.0) {
+					String result = predictions.get(0).name;
+					if(result.equalsIgnoreCase("next")) {
+						FeedItem nextFeedItem = mDatabase.getNextFeedItem(mDB, feedItem, false, showAll);
+						viewFeedItem(nextFeedItem, showAll);
+					}
+					else if(result.equalsIgnoreCase("previous")) {
+						FeedItem previousFeedItem = mDatabase.getNextFeedItem(mDB, feedItem, true, showAll);
+						viewFeedItem(previousFeedItem, showAll);
+					}
+					else if(result.equalsIgnoreCase("view")) {
+						viewFeedItemOnline(feedItem);
+					}
+				}
+			}
+			
+			private void viewFeedItem(FeedItem feedItem, boolean showAll) {
+				if(feedItem != null) {
+					Bundle bundle = new Bundle();
+					bundle.putString(Feeds._ID, feedItem.getId());
+					Intent intent = new Intent(getApplicationContext(), FeedItemActivity.class);
+					intent.putExtras(bundle);
+					intent.putExtra("showAll", showAll);
+					startActivityForResult(intent, 0);
+				}
 				finish();
-				return true;
+			}
+			
+			private void viewFeedItemOnline(FeedItem feedItem) {
+				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(feedItem.getLink()));
+				startActivity(intent);
+				finish();
 			}
 		});
-		
-		return true;
 	}
 	
 	private void displayActivity() {
@@ -135,6 +158,7 @@ public class FeedItemActivity extends Activity {
 			// get feed item
 			feedItemId = bundle.getString(Feeds._ID);
 			feedItem = mDatabase.getFeedItem(mDB, feedItemId);
+			showAll = bundle.getBoolean("showAll");
 			
 			// get feed
 			Feed feed = mDatabase.getFeed(mDB, feedItem.getFeedId());
@@ -142,23 +166,23 @@ public class FeedItemActivity extends Activity {
 			// set activity title
 			setTitle(feed.getName());
 			
-			// get TextView
+			// get TextView, WebView
 			final TextView txtTitle = (TextView)findViewById(R.id.textViewTitle);
 			final TextView txtDate = (TextView)findViewById(R.id.textViewDate);
 			final WebView txtContent = (WebView)findViewById(R.id.textViewContent);
 			
-			// set TextView values
+			// set TextView, WebView values
 			txtTitle.setText(Html.fromHtml("<a href=\"" + feedItem.getLink() + "\">" + feedItem.getTitle() + "</a>"));
 			txtTitle.setMovementMethod(LinkMovementMethod.getInstance());
 			txtDate.setText(feedItem.getPrettyDate(this.getApplicationContext()));
 			String content = feedItem.getContent();
 			txtContent.loadDataWithBaseURL(null, content, "text/html", "utf-8", null);
 			
-			// get preferences and this feed item as read
+			// get preferences; if necessary, set this feed item as read
 			SharedPreferences preferences = getApplicationContext().getSharedPreferences("preferences", 0);
 			boolean autoMarkAsRead = preferences.getBoolean("auto_mark_as_read", false);
 			if(autoMarkAsRead) {
-				mDatabase.markFeedItemAsRead(mDB, feedItemId);
+				mDatabase.markFeedItemAsRead(mDB, feedItemId, true);
 			}
 		}
 	}
